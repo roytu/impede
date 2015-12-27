@@ -19,3 +19,6 @@ class Config(object):
 
     resolution_step = 0.1
     """ Factor to decrease step until things work """
+
+    time_step = 0.01
+    """ Number of seconds per timestep """
