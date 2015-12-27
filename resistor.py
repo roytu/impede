@@ -68,13 +68,15 @@ class Resistor(Component):
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
-        A constraint is a predicate that returns True if it is satisfied.
+        A constraint is a tuple (function, variables), where
+        function is a function taking values of nodes and edges and
+        variables is a list of the Node and Edge objects.
 
         Returns:
-            List of zero-argument functions
+            List of tuples (function, variables)
         """
-        def ohms_law():
-            voltage_drop = self._node_b.value() - self._node_a.value()
-            expected_current = voltage_drop / self._resistance
-            return abs(self._edge_i.value() - expected_current) < Config.epsilon
-        return [ohms_law]
+        def ohms_law(voltage_a, voltage_b, current_i):
+            voltage_drop = voltage_a - voltage_b
+            expected_current = float(voltage_drop) / self._resistance
+            return abs(current_i - expected_current) < Config.epsilon
+        return [(ohms_law, [self._node_a, self._node_b, self._edge_i])]

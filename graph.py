@@ -5,10 +5,14 @@ Nodes and edges carry an ID that identifies them within the graph.
 IDs should be a type that supports equality.
 """
 
+from constraint import Problem
+from config import Config as Cfg
+from util import irangef
+
 class Node(object):
     """ A node object designates each point in the graph.
     On initialization, the node is assigned an ID by the graph. """
-    def __init__(self, graph, value=None):
+    def __init__(self, graph, value=None, fixed=False):
         """ Adds this node to the graph and retrieves an ID.
 
         Args:
@@ -17,6 +21,15 @@ class Node(object):
         """
         self._id = graph.add_node(self)
         self._value = value
+        self._fixed = fixed
+
+    def is_fixed(self):
+        """ Returns whether value is fixed or not.
+
+        Returns:
+            bool
+        """
+        return self._fixed
 
     def value(self):
         """ Returns the value stored by this node.
@@ -26,10 +39,18 @@ class Node(object):
         """
         return self._value
 
+    def set_value(self, value):
+        """ Sets the value stored by this node.
+
+        Args:
+            value : any type
+        """
+        self._value = value
+
 class Edge(object):
     """ A edge object designates each current-carrying in the graph.
     On initialization, the edge is assigned an ID by the graph. """
-    def __init__(self, graph, value=None):
+    def __init__(self, graph, value=None, fixed=False):
         """ Adds this edge to the graph and retrieves an ID.
 
         Args:
@@ -38,6 +59,15 @@ class Edge(object):
         """
         self._id = graph.add_edge(self)
         self._value = value
+        self._fixed = fixed
+
+    def is_fixed(self):
+        """ Returns whether value is fixed or not.
+
+        Returns:
+            bool
+        """
+        return self._fixed
 
     def value(self):
         """ Returns the value stored by this node.
@@ -46,6 +76,14 @@ class Edge(object):
             any type
         """
         return self._value
+
+    def set_value(self, value):
+        """ Sets the value stored by this edge.
+
+        Args:
+            value : any type
+        """
+        self._value = value
 
 class Graph(object):
     """ A graph object stores nodes and edges. """
@@ -86,5 +124,42 @@ class Graph(object):
 
     def solve(self):
         """ Assigns values to nodes and edges until all constraints are met. """
-        # TODO
-        pass
+        problem = Problem()
+
+        # Initialize variables and supply domains (input voltages are fixed)
+        res = 1
+        solutions = []
+
+        # Gather variables
+        variables = set([])
+        for component in self._components:
+            variables = variables.union(set(component.variables()))
+
+        while not solutions:
+            problem = Problem()
+            for component in self._components:
+                # Add constraints
+                constraints = component.constraints()
+                for constraint in constraints:
+                    problem.addConstraint(*constraint)
+
+            for variable in variables:
+                # If node is an input voltage, restrict domain
+                if variable.is_fixed():
+                    problem.addVariable(variable, [variable.value()])
+                else:
+                    if isinstance(variable, Node):
+                        voltage_range = irangef(Cfg.min_voltage, Cfg.max_voltage, res)
+                        problem.addVariable(variable, list(voltage_range))
+                    if isinstance(variable, Edge):
+                        current_range = irangef(Cfg.min_current, Cfg.max_current, res)
+                        problem.addVariable(variable, list(current_range))
+
+            # Run the constraint solver.  If there are no solutions, initialize with
+            # finer domains and retry until we get a solution.
+            solutions = problem.getSolutions()
+            res *= Cfg.resolution_step
+
+        # Apply the first solution to the graph
+        for variable, value in solutions[0].items():
+            variable.set_value(value)

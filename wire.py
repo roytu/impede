@@ -66,11 +66,13 @@ class Wire(Component):
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
-        A constraint is a predicate that returns True if it is satisfied.
+        A constraint is a tuple (function, variables), where
+        function is a function taking values of nodes and edges and
+        variables is a list of the Node and Edge objects.
 
         Returns:
-            List of zero-argument functions
+            List of tuples (function, variables)
         """
-        def eq_voltage():
-            return abs(self._node_a.value() - self._node_b.value()) < Config.epsilon
-        return [eq_voltage]
+        def eq_voltage(voltage_a, voltage_b):
+            return abs(voltage_a - voltage_b) < Config.epsilon
+        return [(eq_voltage, [self._node_a, self._node_b])]
