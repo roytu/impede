@@ -12,7 +12,7 @@ from util import irangef
 class Node(object):
     """ A node object designates each point in the graph.
     On initialization, the node is assigned an ID by the graph. """
-    def __init__(self, graph, value=None, fixed=False):
+    def __init__(self, graph, value=0, fixed=False):
         """ Adds this node to the graph and retrieves an ID.
 
         Args:
@@ -50,7 +50,7 @@ class Node(object):
 class Edge(object):
     """ A edge object designates each current-carrying in the graph.
     On initialization, the edge is assigned an ID by the graph. """
-    def __init__(self, graph, value=None, fixed=False):
+    def __init__(self, graph, value=0, fixed=False):
         """ Adds this edge to the graph and retrieves an ID.
 
         Args:
@@ -128,14 +128,14 @@ class Graph(object):
 
         # Initialize variables and supply domains (input voltages are fixed)
         res = 1
-        solutions = []
 
         # Gather variables
         variables = set([])
         for component in self._components:
             variables = variables.union(set(component.variables()))
 
-        while not solutions:
+        solution = None
+        while not solution:
             problem = Problem()
             for component in self._components:
                 # Add constraints
@@ -157,9 +157,9 @@ class Graph(object):
 
             # Run the constraint solver.  If there are no solutions, initialize with
             # finer domains and retry until we get a solution.
-            solutions = problem.getSolutions()
+            solution = problem.getSolution()
             res *= Cfg.resolution_step
 
-        # Apply the first solution to the graph
-        for variable, value in solutions[0].items():
+        # Apply the solution to the graph
+        for variable, value in solution.items():
             variable.set_value(value)
