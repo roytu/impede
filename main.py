@@ -10,13 +10,23 @@ from units import Units
 
 if __name__ == "__main__":
     r = 318
-    c = 10 * Units.u
+    c = 1 * Units.u
     lpf = LowPassFilter.make(r, c)
+    print("Cutoff frequency: {0}".format(LowPassFilter.cutoff_frequency(r, c)))
 
-    input_signal = Signal.sine(0.01, 200, 5)
-    output_signal = lpf.execute(input_signal)
+    fs, transfers = [], []
+    for f in range(100, 1000, 100):
+        input_signal = Signal.sine(0.1, f, 5)
+        output_signal = lpf.execute(input_signal)
 
-    plt.plot(input_signal, label="Input")
-    plt.plot(output_signal, label="Output")
+        fs.append(f)
+        transfers.append(max(output_signal) / 5)
+
+        #plt.plot(input_signal, label="Input: {0} Hz".format(f))
+        #plt.plot(output_signal, label="Output: {0} Hz".format(f))
+
+    plt.xlabel("Frequency (in Hz.)")
+    plt.ylabel("Gain")
+    plt.plot(fs, transfers)
     plt.legend()
     plt.show()
