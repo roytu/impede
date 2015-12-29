@@ -61,7 +61,7 @@ class Resistor(Component):
         """ Returns a set of variables under constraints.
 
         Returns:
-            set of tuples (string, Node or Edge or None)
+            set of Nodes, Edges, tuples, or strings
         """
         return set([self._node_a, self._node_b, self._edge_i])
 

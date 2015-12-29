@@ -62,23 +62,38 @@ class Capacitor(Component):
         """ Returns a set of variables under constraints.
 
         Returns:
-            set of nodes and edges
+            set of Nodes, Edges, tuples, or strings
         """
-        return set([self._node_a, self._node_b, self._edge_i])
+        return set([self._node_a, self._node_b, self._edge_i, (self, "dv/dt")])
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
-        A constraint is a tuple (function, variables), where
-        function is a function taking values of nodes and edges and
-        variables is a list of the Node and Edge objects.
+        A constraint is a tuple (coefficients, variables), where
+        coefficients is a list of numbers corresponding to the linear
+        equation:
+
+            A_0 * x_0 + A_1 * x_1 + ... + A_{n-1} * x_{n-1} = 0,
+
+        and variables is a list of the Node and Edge objects.
 
         Returns:
-            List of tuples (function, variables)
+            List of tuples (coefficients, variables)
         """
-        def capacitor_equation(voltage_a, voltage_b, current_i):
-            prev_voltage = self._node_a.value() - self._node_b.value()
-            next_voltage = voltage_a - voltage_b
-            dvdt = (next_voltage - prev_voltage) / Config.time_step
-            expected_current = self._capacitance * dvdt
-            return abs(current_i - expected_current) < Config.epsilon
-        return [(capacitor_equation, [self._node_a, self._node_b, self._edge_i])]
+        result = []
+
+        # Capacitor equation
+        coefficient = [0, 0, -1, self._capacitance]
+        variable = [self._node_a, self._node_b, self._edge_i, (self, "dv/dt")]
+        result.append((coefficient, variable))
+
+        # dv/dt restriction
+        # dv/dt = (next_voltage - prev_voltage) / Config.time_step
+        prev_voltage = self._node_a.value() - self._node_b.value()
+        coefficient = [float(1) / Config.time_step,
+                       float(-1) / Config.time_step,
+                       -1,
+                       float(-prev_voltage) / Config.time_step]
+        variable = [self._node_a, self._node_b, (self, "dv/dt"), "1"]
+        result.append((coefficient, variable))
+
+        return result

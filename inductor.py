@@ -62,23 +62,37 @@ class Inductor(Component):
         """ Returns a set of variables under constraints.
 
         Returns:
-            set of nodes and edges
+            set of Nodes, Edges, tuples, or strings
         """
-        return set([self._node_a, self._node_b, self._edge_i])
+        return set([self._node_a, self._node_b, self._edge_i, (self, "di/dt")])
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
-        A constraint is a tuple (function, variables), where
-        function is a function taking values of nodes and edges and
-        variables is a list of the Node and Edge objects.
+        A constraint is a tuple (coefficients, variables), where
+        coefficients is a list of numbers corresponding to the linear
+        equation:
+
+            A_0 * x_0 + A_1 * x_1 + ... + A_{n-1} * x_{n-1} = 0,
+
+        and variables is a list of the Node and Edge objects.
 
         Returns:
-            List of tuples (function, variables)
+            List of tuples (coefficients, variables)
         """
-        def inductor_equation(voltage_a, voltage_b, current_i):
-            prev_current = self._edge_i.value()
-            next_current = current_i
-            didt = (next_current - prev_current) / Config.time_step
-            expected_voltage = self._inductance * didt
-            return abs((voltage_a - voltage_b) - expected_voltage) < Config.epsilon
-        return [(inductor_equation, [self._node_a, self._node_b, self._edge_i])]
+        result = []
+
+        # Inductor equation
+        coefficient = [1, -1, 0, self._inductance]
+        variable = [self._node_a, self._node_b, self._edge_i, (self, "di/dt")]
+        result.append((coefficient, variable))
+
+        # di/dt restriction
+        # di/dt = (next_current - prev_current) / Config.time_step
+        prev_current = self._edge_i.value()
+        coefficient = [float(1) / Config.time_step,
+                       -1,
+                       float(-prev_current) / Config.time_step]
+        variable = [self._edge_i, (self, "di/dt"), "1"]
+        result.append((coefficient, variable))
+
+        return result
