@@ -3,7 +3,6 @@
 
 from graph import Node, Edge
 from component import Component
-from config import Config
 
 class Resistor(Component):
     """ Resistor component """
@@ -27,7 +26,7 @@ class Resistor(Component):
         if not node_b:
             node_b = Node(graph)
         if not edge_i:
-            edge_i = Edge(graph)
+            edge_i = Edge(graph, node_a, node_b)
 
         self._node_a = node_a
         self._node_b = node_b
@@ -62,21 +61,23 @@ class Resistor(Component):
         """ Returns a set of variables under constraints.
 
         Returns:
-            set of nodes and edges
+            set of tuples (string, Node or Edge or None)
         """
         return set([self._node_a, self._node_b, self._edge_i])
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
-        A constraint is a tuple (function, variables), where
-        function is a function taking values of nodes and edges and
-        variables is a list of the Node and Edge objects.
+        A constraint is a tuple (coefficients, variables), where
+        coefficients is a list of numbers corresponding to the linear
+        equation:
+
+            A_0 * x_0 + A_1 * x_1 + ... + A_{n-1} * x_{n-1} = 0,
+
+        and variables is a list of the Node and Edge objects.
 
         Returns:
-            List of tuples (function, variables)
+            List of tuples (coefficients, variables)
         """
-        def ohms_law(voltage_a, voltage_b, current_i):
-            voltage_drop = voltage_a - voltage_b
-            expected_current = float(voltage_drop) / self._resistance
-            return abs(current_i - expected_current) < Config.epsilon
-        return [(ohms_law, [self._node_a, self._node_b, self._edge_i])]
+        coefficients = [float(1) / self._resistance, float(-1) / self._resistance, -1]
+        variables = [self._node_a, self._node_b, self._edge_i]
+        return [(coefficients, variables)]

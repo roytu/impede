@@ -27,7 +27,7 @@ class Capacitor(Component):
         if not node_b:
             node_b = Node(graph)
         if not edge_i:
-            edge_i = Edge(graph)
+            edge_i = Edge(graph, node_a, node_b)
 
         self._node_a = node_a
         self._node_b = node_b

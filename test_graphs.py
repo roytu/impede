@@ -12,7 +12,7 @@ def test_graphs():
     # Simple wire
     graph = Graph()
     node_a = Node(graph, value=5, fixed=True)
-    node_b = Node(graph)
+    node_b = Node(graph, output=True)
     wire = Wire(graph, node_a, node_b)
     graph.add_component(wire)
     graph.solve()
@@ -24,7 +24,7 @@ def test_graphs():
     node_a = Node(graph, value=10, fixed=True)
     node_b = Node(graph)
     node_c = Node(graph)
-    node_d = Node(graph)
+    node_d = Node(graph, output=True)
 
     wire = Wire(graph, node_a, node_b)
     graph.add_component(wire)
@@ -44,7 +44,7 @@ def test_graphs():
     graph = Graph()
     node_a = Node(graph, value=5, fixed=True)
     node_b = Node(graph, value=0, fixed=True)
-    edge_i = Edge(graph)
+    edge_i = Edge(graph, node_a, node_b)
     resistor = Resistor(graph, 10, node_a, node_b, edge_i)
     graph.add_component(resistor)
     graph.solve()

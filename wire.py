@@ -3,7 +3,6 @@
 
 from graph import Node, Edge
 from component import Component
-from config import Config
 
 class Wire(Component):
     """ Wire component """
@@ -26,7 +25,7 @@ class Wire(Component):
         if not node_b:
             node_b = Node(graph)
         if not edge_i:
-            edge_i = Edge(graph)
+            edge_i = Edge(graph, node_a, node_b)
 
         self._node_a = node_a
         self._node_b = node_b
@@ -60,19 +59,23 @@ class Wire(Component):
         """ Returns a set of variables under constraints.
 
         Returns:
-            set of nodes and edges
+            set of Nodes, Edges, tuples, or strings
         """
         return set([self._node_a, self._node_b, self._edge_i])
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
-        A constraint is a tuple (function, variables), where
-        function is a function taking values of nodes and edges and
-        variables is a list of the Node and Edge objects.
+        A constraint is a tuple (coefficients, variables), where
+        coefficients is a list of numbers corresponding to the linear
+        equation:
+
+            A_0 * x_0 + A_1 * x_1 + ... + A_{n-1} * x_{n-1} = 0,
+
+        and variables is a list of the Node and Edge objects.
 
         Returns:
-            List of tuples (function, variables)
+            List of tuples (coefficients, variables)
         """
-        def eq_voltage(voltage_a, voltage_b):
-            return abs(voltage_a - voltage_b) < Config.epsilon
-        return [(eq_voltage, [self._node_a, self._node_b])]
+        coefficients = [1, -1]
+        variables = [self._node_a, self._node_b]
+        return [(coefficients, variables)]
