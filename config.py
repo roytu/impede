@@ -7,5 +7,5 @@ class Config(object):
     epsilon = 0.001
     """ Error threshold for equality """
 
-    time_step = 100 * Units.u
+    time_step = float(1) / 44100
     """ Number of seconds per timestep """
