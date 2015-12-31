@@ -185,6 +185,7 @@ class Graph(object):
             variables = variables.union(set(component.variables()))
             constraints += component.constraints()
 
+        variables -= set([const_variable])
         variables = list(variables)
         variables.append(const_variable)
 
@@ -220,6 +221,8 @@ class Graph(object):
             var_to_row[variable] = i
 
         dim = len(variables)
+        print("Variables: {0}".format(len(variables)))
+        print("Constraints: {0}".format(len(constraints)))
         constraint_matrix = np.zeros((dim, dim))
         for i, (cs, vs) in enumerate(constraints):
             row = np.zeros(dim)

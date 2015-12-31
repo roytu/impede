@@ -6,6 +6,7 @@ from tests import test
 from graph import Node, Edge, Graph
 from wire import Wire
 from resistor import Resistor
+from common_filters import InvertingOpAmpFilter
 
 def test_graphs():
     """ Test graphs. """
@@ -50,6 +51,13 @@ def test_graphs():
     graph.solve()
     # Test that the current through the resistor is 0.5
     test(0.5, edge_i.value(), epsilon=Config.epsilon)
+
+    # Inverting op amp
+    filt = InvertingOpAmpFilter.make(100, 100)
+    input_signal = [5]
+    output_signal = filt.execute(input_signal)
+    # Test that the op amp inverts the input voltage
+    test(-input_signal[0], output_signal[0], epsilon=Config.epsilon)
 
 if __name__ == "__main__":
     test_graphs()
