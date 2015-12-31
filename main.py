@@ -60,6 +60,6 @@ if __name__ == "__main__":
 
     mxr_filter = make_mxr_distortion_filter()
     input_signal = SH.load(filename, peak=1)
-    output_signal = mxr_filter.execute(input_signal)
+    #output_signal = mxr_filter.execute(input_signal)
     SH.play(input_signal, bytespersample=1, peak=1)
-    SH.play(output_signal, bytespersample=1, peak=1)
+    #SH.play(output_signal, bytespersample=1, peak=1)

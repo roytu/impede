@@ -93,7 +93,7 @@ class SoundHandler(object):
             # Renormalize
             sample /= 2 ** ((bytespersample * 8) - 1)
             sample *= peak
-            return int(sample)
+            return sample
         samples = []
         for _ in range(length):
             frame = wav_reader.readframes(1)
