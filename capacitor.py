@@ -64,7 +64,7 @@ class Capacitor(Component):
         Returns:
             set of Nodes, Edges, tuples, or strings
         """
-        return set([self._node_a, self._node_b, self._edge_i, (self, "dv/dt")])
+        return set([self._node_a, self._node_b, self._edge_i, "1"])
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
@@ -79,21 +79,11 @@ class Capacitor(Component):
         Returns:
             List of tuples (coefficients, variables)
         """
-        result = []
-
         # Capacitor equation
-        coefficient = [0, 0, -1, self._capacitance]
-        variable = [self._node_a, self._node_b, self._edge_i, (self, "dv/dt")]
-        result.append((coefficient, variable))
-
-        # dv/dt restriction
-        # dv/dt = (next_voltage - prev_voltage) / Config.time_step
         prev_voltage = self._node_a.value() - self._node_b.value()
         coefficient = [float(1) / Config.time_step,
                        float(-1) / Config.time_step,
-                       -1,
+                       float(-1) / self._capacitance,
                        float(-prev_voltage) / Config.time_step]
-        variable = [self._node_a, self._node_b, (self, "dv/dt"), "1"]
-        result.append((coefficient, variable))
-
-        return result
+        variable = [self._node_a, self._node_b, self._edge_i, "1"]
+        return [(coefficient, variable)]

@@ -64,7 +64,7 @@ class Inductor(Component):
         Returns:
             set of Nodes, Edges, tuples, or strings
         """
-        return set([self._node_a, self._node_b, self._edge_i, (self, "di/dt")])
+        return set([self._node_a, self._node_b, self._edge_i, "1"])
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.
@@ -79,20 +79,11 @@ class Inductor(Component):
         Returns:
             List of tuples (coefficients, variables)
         """
-        result = []
-
         # Inductor equation
-        coefficient = [1, -1, 0, self._inductance]
-        variable = [self._node_a, self._node_b, self._edge_i, (self, "di/dt")]
-        result.append((coefficient, variable))
-
-        # di/dt restriction
-        # di/dt = (next_current - prev_current) / Config.time_step
         prev_current = self._edge_i.value()
-        coefficient = [float(1) / Config.time_step,
-                       -1,
+        coefficient = [float(-1) / self._inductance,
+                       float(1) / self._inductance,
+                       float(1) / Config.time_step,
                        float(-prev_current) / Config.time_step]
-        variable = [self._edge_i, (self, "di/dt"), "1"]
-        result.append((coefficient, variable))
-
-        return result
+        variable = [self._node_a, self._node_b, self._edge_i, "1"]
+        return [(coefficient, variable)]
