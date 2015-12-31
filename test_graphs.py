@@ -7,6 +7,7 @@ from graph import Node, Edge, Graph
 from wire import Wire
 from resistor import Resistor
 from common_filters import InvertingOpAmpFilter
+from opamp import Opamp
 
 def test_graphs():
     """ Test graphs. """
@@ -51,6 +52,15 @@ def test_graphs():
     graph.solve()
     # Test that the current through the resistor is 0.5
     test(0.5, edge_i.value(), epsilon=Config.epsilon)
+
+    # Buffer
+    graph = Graph()
+    node_out = Node(graph, output=True)
+    node_in = Node(graph, value=5, fixed=True)
+    op_amp = Opamp(graph, node_a=node_out, node_b=node_in, node_out=node_out)
+    graph.add_component(op_amp)
+    graph.solve()
+    test(5, node_out.value(), epsilon=Config.epsilon)
 
     # Inverting op amp
     filt = InvertingOpAmpFilter.make(100, 100)

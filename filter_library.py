@@ -28,8 +28,8 @@ def make_mxr_distortion_filter():
     node_out = Node(graph, fixed=True, output=True)
 
     # Supply
-    node_4_5 = Node(graph, value=4.5, fixed=True)
-    node_gnd = Node(graph, value=0, fixed=True)
+    node_4_5 = Node(graph, value=4.5, fixed=True, source=True)
+    node_gnd = Node(graph, value=0, fixed=True, source=True)
 
     # Op amp plus section
     edge = Edge(graph, node_in, node_gnd)

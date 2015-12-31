@@ -1,8 +1,12 @@
 
 """ Module containing methods to handle sounds. """
 
+import numpy as np
+from scipy.interpolate import interp1d
 from pyaudio import PyAudio
 import wave, struct
+
+from config import Config
 
 class SoundHandler(object):
     """ Static class with methods to input / output / play sounds """
@@ -66,14 +70,14 @@ class SoundHandler(object):
         wav_writer.writeframes(data)
         wav_writer.close()
     @staticmethod
-    def load(filename, peak=1):
+    def load(filename, sampleperiod=Config.time_step, peak=1):
         """ Load WAV file as samples.
 
         Only reads mono, little-endian files.
 
         Args:
-            samples : vector of floats
             filename : string
+            sampleperiod : seconds per sample
             peak : value corresponding to the largest magnitude
 
         Returns:
@@ -99,5 +103,13 @@ class SoundHandler(object):
             frame = wav_reader.readframes(1)
             sample = frame_to_sample(frame)
             samples.append(sample)
+        framerate = wav_reader.getframerate()
         wav_reader.close()
+        # Sample every sampleperiod
+        step = float(1) / framerate
+        total_time = len(samples) * step
+        f = interp1d(np.arange(0, total_time, step), samples)
+
+        xs = np.arange(0, total_time - step, sampleperiod)
+        samples = f(xs)
         return samples

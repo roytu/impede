@@ -7,21 +7,26 @@ IDs should be a type that supports equality.
 
 import numpy as np
 from numpy import linalg
+from scipy.sparse.linalg import spsolve
 
 class Node(object):
     """ A node object designates each point in the graph.
     On initialization, the node is assigned an ID by the graph. """
-    def __init__(self, graph, value=0, fixed=False, output=False):
+    def __init__(self, graph, value=0, fixed=False, output=False, source=False):
         """ Adds this node to the graph and retrieves an ID.
 
         Args:
             graph : Graph object
             value : any type
+            fixed : whether this node has a fixed voltage
+            output : whether this is an output node
+            output : whether this is a source or sink
         """
         self._id = graph.add_node(self)
         self._value = value
         self._fixed = fixed
         self._output = output
+        self._source = source
 
     def is_fixed(self):
         """ Returns whether value is fixed or not.
@@ -39,6 +44,15 @@ class Node(object):
             bool
         """
         return self._output
+
+    def is_source(self):
+        """ Returns whether this is a source or sink.  This matters
+        because the graph does not run KCL on sources / sinks.
+
+        Returns:
+            bool
+        """
+        return self._source
 
     def value(self):
         """ Returns the value stored by this node.
@@ -173,21 +187,35 @@ class Graph(object):
                 polarities.append(polarity)
         return (edges, polarities)
 
-    def solve(self):
-        """ Assigns values to nodes and edges until all constraints are met.
-        TODO THIS CODE SUCKS
+    def variables(self):
+        """ Return a list of variables to be used in the matrix solver.
+
+        Returns:
+            list of Nodes, Edges, tuples, or strings
         """
         const_variable = "1"
         # Gather variables and constraints
         variables = set([])
-        constraints = []
         for component in self._components:
             variables = variables.union(set(component.variables()))
-            constraints += component.constraints()
 
         variables -= set([const_variable])
         variables = list(variables)
         variables.append(const_variable)
+        return variables
+
+    def constraints(self):
+        """ Return a list of constraints to be used in the matrix solver.
+
+        Returns:
+            List of tuples (coefficients, variables)
+        """
+        const_variable = "1"
+        variables = self.variables()
+
+        constraints = []
+        for component in self._components:
+            constraints += component.constraints()
 
         # Add constraints to fixed nodes
         for variable in variables:
@@ -200,19 +228,30 @@ class Graph(object):
             if isinstance(variable, Node):
                 # Get all edges and their directions wrt. this node
                 edges, polarities = self.connected_edges(variable)
-                if len(edges) <= 1:
-                    if variable.is_output():
-                        # Outputs assume an infinite impedence
-                        new_constraint = ([1], edges)
+                if not variable.is_source():
+                    if len(edges) <= 1:
+                        if variable.is_output():
+                            # Outputs assume an infinite impedence
+                            new_constraint = ([1], edges)
+                            constraints.append(new_constraint)
+                    else:
+                        new_constraint = (polarities, edges)
                         constraints.append(new_constraint)
-                else:
-                    # Don't run KCL on sources or sinks
-                    new_constraint = (polarities, edges)
-                    constraints.append(new_constraint)
 
         # Add a constraint for the constant "1"
         constraints.append(([1], [const_variable]))
         # Note that this should be the last row in the matrix!!
+
+        return constraints
+
+    def solve(self):
+        """ Assigns values to nodes and edges until all constraints are met.
+        TODO THIS CODE SUCKS
+        """
+        const_variable = "1"
+        # Gather variables and constraints
+        variables = self.variables()
+        constraints = self.constraints()
 
         # For each constraint add a row to the matrix
         # Constraints take the form (coefficients, variables)
@@ -221,15 +260,40 @@ class Graph(object):
             var_to_row[variable] = i
 
         dim = len(variables)
-        print("Variables: {0}".format(len(variables)))
-        print("Constraints: {0}".format(len(constraints)))
-        constraint_matrix = np.zeros((dim, dim))
+        dim_cons = len(constraints)
+        overconstrained_matrix = np.zeros((dim_cons, dim))
         for i, (cs, vs) in enumerate(constraints):
             row = np.zeros(dim)
             for c, v in zip(cs, vs):
                 row[var_to_row[v]] = c
-            constraint_matrix[i] = row
+            overconstrained_matrix[i] = row
+
+        # Prune constraint matrix of dependent rows
+        def is_linearly_independent(row, matrix):
+            row = matrix[row_index]
+            for i in range(row_index):
+                other_row = matrix[i]
+                product_of_norms = linalg.norm(row) * linalg.norm(other_row)
+                cauchy = product_of_norms - abs(np.inner(row, other_row))
+                if cauchy < 1E-15:
+                    return False
+            return True
+
+        constraint_matrix = np.zeros((dim, dim))
+        current_row = 0
+        for row_index in range(len(overconstrained_matrix)):
+            # Add the row and see if it leads to any zero eigenvalues
+            new_matrix = np.copy(constraint_matrix)
+            new_matrix[current_row] = overconstrained_matrix[row_index]
+            #lambdas, _ = linalg.eig(new_matrix.T)
+            #eig_count = np.count_nonzero(lambdas)
+            # If adding the row gave us another non-zero eigenvalue, we're OK!
+            rank = linalg.matrix_rank(new_matrix)
+            if rank > current_row:
+                constraint_matrix[current_row] = overconstrained_matrix[row_index]
+                current_row += 1
         solution = linalg.solve(constraint_matrix, np.append(np.zeros(dim - 1), [1]))
+        #solution = spsolve(constraint_matrix, np.append(np.zeros(dim - 1), [1]))
 
         # Apply the solution to the graph
         for variable, value in zip(variables, solution):

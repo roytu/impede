@@ -1,6 +1,8 @@
 
 """ Filter module """
 
+from time import clock
+
 class Filter(object):
     """ A Filter object takes a circuit and supports functionality that
     takes in a voltage-time signal and returns a new voltage-time signal.
@@ -21,9 +23,15 @@ class Filter(object):
             list of voltages (float)
         """
         output_voltages = []
+        i = 0
+        start = clock()
         for input_voltage in voltages:
             self._input_node.set_value(input_voltage)
             self._graph.solve()
             output_voltage = self._output_node.value()
             output_voltages.append(output_voltage)
+            print("{0} / {1}".format(i, len(voltages)))
+            i += 1
+        diff = clock() - start
+        print("Time elapsed (s): {0}".format(diff))
         return output_voltages

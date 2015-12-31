@@ -8,4 +8,5 @@ class Config(object):
     """ Error threshold for equality """
 
     time_step = float(1) / 44100
+    #time_step = 5 * Units.u
     """ Number of seconds per timestep """

@@ -27,7 +27,7 @@ class LowPassFilter(object):
 
         input_node = Node(graph, fixed=True)
         output_node = Node(graph, output=True)
-        ground_node = Node(graph, fixed=True, value=0)
+        ground_node = Node(graph, value=0, fixed=True, source=True)
 
         # Add resistor from input to output
         graph.add_component(Resistor(graph, r, input_node, output_node))
