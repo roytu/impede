@@ -7,6 +7,9 @@ from common_filters import LowPassFilter
 from signals import Signal
 from graph import Node, Edge, Graph
 from diode import Diode
+from resistor import Resistor
+from capacitor import Capacitor
+from config import Config
 from units import Units
 from util import irangef
 
@@ -46,10 +49,6 @@ def lowpass_filter_transfer_curve():
         fs.append(f)
         gains.append(gain)
 
-        #plt.plot(input_signal)
-        #plt.plot(output_signal)
-        #plt.show()
-
     cutoff_freq = LowPassFilter.cutoff_frequency(r, c)
     plt.title("Lowpass Transfer Curve (cutoff={0} Hz)".format(cutoff_freq))
     plt.xlabel("Frequency (Hz)")
@@ -57,6 +56,39 @@ def lowpass_filter_transfer_curve():
     plt.plot(fs, gains)
     plt.show()
 
+def capacitor_charge_curve():
+    """ Plots the charging of a capacitor overtime. """
+    r = 100
+    c = 10 * Units.u
+
+    graph = Graph()
+    node_5 = Node(graph, value=5, fixed=True, source=True)
+    node_gnd = Node(graph, value=0, fixed=True, source=True)
+    node = Node(graph)
+
+    # Resistor
+    edge = Edge(graph, node_5, node)
+    graph.add_component(Resistor(graph, r, node_5, node, edge))
+    # Capacitor
+    edge = Edge(graph, node, node_gnd)
+    graph.add_component(Capacitor(graph, c, node, node_gnd, edge))
+
+    ts, vs = [], []
+    for t in irangef(0, 1, Config.epsilon):
+        graph.solve()
+
+        v = node.value()
+
+        ts.append(t)
+        vs.append(v)
+
+    plt.title("Capacitor Charge Curve (R = 100 Ohms, C = 10 uF, V = 5 V)")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Voltage (V)")
+    plt.plot(ts, vs)
+    plt.show()
+
 if __name__ == "__main__":
     #diode_iv_curve()
-    lowpass_filter_transfer_curve()
+    #lowpass_filter_transfer_curve()
+    capacitor_charge_curve()
