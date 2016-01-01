@@ -23,15 +23,11 @@ class Filter(object):
             list of voltages (float)
         """
         output_voltages = []
-        i = 0
-        start = clock()
-        for input_voltage in voltages:
+        #for input_voltage in voltages:
+        for input_voltage in voltages[:10000]:
             self._input_node.set_value(input_voltage)
             self._graph.solve()
             output_voltage = self._output_node.value()
             output_voltages.append(output_voltage)
-            print("{0} / {1}".format(i, len(voltages)))
-            i += 1
-        diff = clock() - start
-        print("Time elapsed (s): {0}".format(diff))
+        print(output_voltages)
         return output_voltages
