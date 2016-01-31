@@ -1,5 +1,8 @@
 
-""" Module containing classes to generate common filters. """
+""" Module containing classes to generate common filters.
+
+NOTE THAT ALL FILTERS ASSUME HIGH INPUT IMPEDANCE!!
+"""
 
 from math import pi
 
@@ -25,7 +28,7 @@ class LowPassFilter(object):
         """
         graph = Graph()
 
-        input_node = Node(graph, fixed=True)
+        input_node = Node(graph, fixed=True, source=True)
         output_node = Node(graph, output=True)
         ground_node = Node(graph, value=0, fixed=True, source=True)
 
@@ -58,9 +61,9 @@ class InvertingOpAmpFilter(object):
         """
         graph = Graph()
 
-        input_node = Node(graph, fixed=True, label="V_in")
-        output_node = Node(graph, output=True, label="V_out")
-        ground_node = Node(graph, fixed=True, value=0, label="GND")
+        input_node = Node(graph, fixed=True, source=True, label="V_in")
+        output_node = Node(graph, output=True, source=True, label="V_out")
+        ground_node = Node(graph, value=0, fixed=True, source=True, label="GND")
 
         node_minus = Node(graph, label="V-")
         i1_edge = Edge(graph, input_node, node_minus, label="I1")

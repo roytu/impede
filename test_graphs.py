@@ -73,12 +73,11 @@ def test_inverting_opamp():
     # Test that the op amp inverts the input voltage
     test(-input_signal[0], output_signal[0], epsilon=Config.epsilon)
 
-
 def test_all():
-    #test_wire()
-    #test_chained_wires()
-    #test_resistor()
-    #test_buffer()
+    test_wire()
+    test_chained_wires()
+    test_resistor()
+    test_buffer()
     test_inverting_opamp()
 
 if __name__ == "__main__":

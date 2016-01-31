@@ -285,8 +285,6 @@ class Graph(object):
             for c, v in zip(cs, vs):
                 row[var_to_row[v]] = c
             overconstrained_matrix[i] = row
-        print(overconstrained_matrix)
-        print(map(str, variables))
 
         #[_, e] = qr(overconstrained_matrix, mode="r", pivoting=True)
         #constraint_matrix = overconstrained_matrix[e]
@@ -321,8 +319,6 @@ class Graph(object):
         #solution = spsolve(csc, b)
 
         # Apply the solution to the graph
-        print("SOLUTION")
-        print(solution)
         for variable, value in zip(variables, solution):
             if isinstance(variable, Node) or isinstance(variable, Edge):
                 variable.set_value(value)
