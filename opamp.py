@@ -10,6 +10,8 @@ class Opamp(Component):
         """ Initializes a opamp with two nodes.  A represents V- while B
         represents V+.
 
+        node_out MUST HAVE SOURCE=TRUE
+
         If nodes / edges aren't supplied, new ones are created.
         Supplied nodes / edges should be part of the supplied graph.
 
@@ -31,7 +33,7 @@ class Opamp(Component):
         Example usage, here's a buffer:
 
         >>> graph = Graph()
-        >>> node_out = Node(graph, output=True)
+        >>> node_out = Node(graph, source=True, output=True)
         >>> node_in = Node(graph, value=5, fixed=True)
         >>> op_amp = Opamp(graph, node_a=node_out, node_b=node_in, node_out=node_out)
         >>> graph.add_component(op_amp)
@@ -54,12 +56,10 @@ class Opamp(Component):
             node_b = Node(graph)
         if not node_out:
             node_out = Node(graph)
-        edge_out = Edge(graph, node_out, Node(graph))
 
         self._node_a = node_a
         self._node_b = node_b
         self._node_out = node_out
-        self._edge_out = edge_out
 
     def node_a(self):
         """ Returns node A.
@@ -91,7 +91,7 @@ class Opamp(Component):
         Returns:
             set of Nodes, Edges, tuples, or strings
         """
-        return set([self._node_a, self._node_b, self._node_out, self._edge_out])
+        return set([self._node_a, self._node_b, self._node_out])
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.

@@ -1,8 +1,6 @@
 
 """ Common module to inherit for tests. """
 
-from __future__ import print_function
-
 def test(expected, actual, epsilon=0):
     """ Takes expected and actual values.  If they are different by
     more than epsilon, then print a fail string.  Otherwise, print a pass string.

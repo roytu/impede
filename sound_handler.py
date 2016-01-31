@@ -63,9 +63,13 @@ class SoundHandler(object):
         wav_writer.setnchannels(1)  # Mono
         wav_writer.setsampwidth(bytespersample)  # Number of bytes per sample
         wav_writer.setframerate(framerate)  # Sample rate
+
         def sample_to_byte(s):
-            s = int((float(s) / peak) * 128) + 128
+            if abs(s) > peak:
+                s = peak if s > 0 else -peak
+            s = int((float(s) / peak) * 127) + 128
             return chr(abs(s))
+
         data = "".join([sample_to_byte(s) for s in samples])
         wav_writer.writeframes(data)
         wav_writer.close()

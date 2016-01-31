@@ -23,11 +23,13 @@ class Filter(object):
             list of voltages (float)
         """
         output_voltages = []
-        #for input_voltage in voltages:
-        for input_voltage in voltages[:10000]:
+        for i, input_voltage in enumerate(voltages):
             self._input_node.set_value(input_voltage)
             self._graph.solve()
             output_voltage = self._output_node.value()
             output_voltages.append(output_voltage)
+
+            if i % 100 == 0:
+                print("{0} / {1}".format(i, len(voltages)))
         print(output_voltages)
         return output_voltages

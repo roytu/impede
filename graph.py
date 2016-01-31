@@ -7,7 +7,9 @@ IDs should be a type that supports equality.
 
 import numpy as np
 from numpy import linalg
+from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve
+from scipy.linalg import qr
 
 class Node(object):
     """ A node object designates each point in the graph.
@@ -267,35 +269,44 @@ class Graph(object):
             for c, v in zip(cs, vs):
                 row[var_to_row[v]] = c
             overconstrained_matrix[i] = row
+        print(overconstrained_matrix)
+        print(variables)
 
-        # Prune constraint matrix of dependent rows
-        def is_linearly_independent(row, matrix):
-            row = matrix[row_index]
-            for i in range(row_index):
-                other_row = matrix[i]
-                product_of_norms = linalg.norm(row) * linalg.norm(other_row)
-                cauchy = product_of_norms - abs(np.inner(row, other_row))
-                if cauchy < 1E-15:
-                    return False
-            return True
+        #[_, e] = qr(overconstrained_matrix, mode="r", pivoting=True)
+        #constraint_matrix = overconstrained_matrix[e]
+        #print(overconstrained_matrix)
+        #print(e)
+        #print(constraint_matrix)
 
         constraint_matrix = np.zeros((dim, dim))
         current_row = 0
+        # TODO this code makes grown men cry
         for row_index in range(len(overconstrained_matrix)):
-            # Add the row and see if it leads to any zero eigenvalues
-            new_matrix = np.copy(constraint_matrix)
-            new_matrix[current_row] = overconstrained_matrix[row_index]
-            #lambdas, _ = linalg.eig(new_matrix.T)
-            #eig_count = np.count_nonzero(lambdas)
-            # If adding the row gave us another non-zero eigenvalue, we're OK!
-            rank = linalg.matrix_rank(new_matrix)
-            if rank > current_row:
-                constraint_matrix[current_row] = overconstrained_matrix[row_index]
+            new_row = overconstrained_matrix[row_index]
+
+            # Construct the current matrix
+            if current_row > 0:
+                m = np.zeros((current_row + 1, dim))
+                for r in range(current_row):
+                    m[r] = constraint_matrix[r]
+                m[-1] = new_row
+                m = m.transpose()
+                #rank = linalg.lstsq(m, np.zeros((dim, 1)))[2]
+                rank = linalg.matrix_rank(m)
+                if rank == current_row + 1:
+                    constraint_matrix[current_row] = new_row
+                    current_row += 1
+            else:
+                constraint_matrix[current_row] = new_row
                 current_row += 1
-        solution = linalg.solve(constraint_matrix, np.append(np.zeros(dim - 1), [1]))
-        #solution = spsolve(constraint_matrix, np.append(np.zeros(dim - 1), [1]))
+        b = np.append(np.zeros(dim - 1), [1])
+        solution = linalg.solve(constraint_matrix, b)
+        #csc = csc_matrix(constraint_matrix)
+        #solution = spsolve(csc, b)
 
         # Apply the solution to the graph
+        print("SOLUTION")
+        print(solution)
         for variable, value in zip(variables, solution):
             if isinstance(variable, Node) or isinstance(variable, Edge):
                 variable.set_value(value)
