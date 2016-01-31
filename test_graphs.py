@@ -18,7 +18,7 @@ def test_wire():
     graph.add_component(wire)
     graph.solve()
     # Test that the voltage at both points is equal
-    test(5, node_b.value(), epsilon=Config.epsilon)
+    return test(5, node_b.value(), epsilon=Config.epsilon)
 
 def test_chained_wires():
     # Chained wires
@@ -40,7 +40,7 @@ def test_chained_wires():
     graph.solve()
 
     # Test that the voltage at both points is equal
-    test(10, node_d.value(), epsilon=Config.epsilon)
+    return test(10, node_d.value(), epsilon=Config.epsilon)
 
 def test_resistor():
     """ Test graphs. """
@@ -53,7 +53,7 @@ def test_resistor():
     graph.add_component(resistor)
     graph.solve()
     # Test that the current through the resistor is 0.5
-    test(0.5, edge_i.value(), epsilon=Config.epsilon)
+    return test(0.5, edge_i.value(), epsilon=Config.epsilon)
 
 def test_buffer():
     # Buffer
@@ -63,7 +63,7 @@ def test_buffer():
     op_amp = Opamp(graph, node_a=node_out, node_b=node_in, node_out=node_out)
     graph.add_component(op_amp)
     graph.solve()
-    test(5, node_out.value(), epsilon=Config.epsilon)
+    return test(5, node_out.value(), epsilon=Config.epsilon)
 
 def test_inverting_opamp():
     # Inverting op amp
@@ -71,14 +71,15 @@ def test_inverting_opamp():
     input_signal = [5]
     output_signal = filt.execute(input_signal)
     # Test that the op amp inverts the input voltage
-    test(-input_signal[0], output_signal[0], epsilon=Config.epsilon)
+    return test(-input_signal[0], output_signal[0], epsilon=Config.epsilon)
 
 def test_all():
-    test_wire()
-    test_chained_wires()
-    test_resistor()
-    test_buffer()
-    test_inverting_opamp()
+    tests = [test_wire, test_chained_wires, test_resistor, test_buffer,
+             test_inverting_opamp]
+    if False in [t() for t in tests]:
+        print("At least one test failed.")
+    else:
+        print("All tests passed.")
 
 if __name__ == "__main__":
     test_all()
