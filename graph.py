@@ -14,7 +14,8 @@ from scipy.linalg import qr
 class Node(object):
     """ A node object designates each point in the graph.
     On initialization, the node is assigned an ID by the graph. """
-    def __init__(self, graph, value=0, fixed=False, output=False, source=False):
+    def __init__(self, graph, value=0, fixed=False, output=False, source=False,
+                 label=None):
         """ Adds this node to the graph and retrieves an ID.
 
         Args:
@@ -22,13 +23,15 @@ class Node(object):
             value : any type
             fixed : whether this node has a fixed voltage
             output : whether this is an output node
-            output : whether this is a source or sink
+            source : whether this is a source or sink
+            label : optional name for pretty printing
         """
         self._id = graph.add_node(self)
         self._value = value
         self._fixed = fixed
         self._output = output
         self._source = source
+        self._label = label
 
     def is_fixed(self):
         """ Returns whether value is fixed or not.
@@ -71,11 +74,16 @@ class Node(object):
             value : any type
         """
         self._value = value
+    def __str__(self):
+        if self._label:
+            return self._label
+        else:
+            return object.__str__(self)
 
 class Edge(object):
     """ A edge object designates each current-carrying in the graph.
     On initialization, the edge is assigned an ID by the graph. """
-    def __init__(self, graph, node_a, node_b, value=0, fixed=False):
+    def __init__(self, graph, node_a, node_b, value=0, fixed=False, label=None):
         """ Adds this edge to the graph and retrieves an ID.
 
         Args:
@@ -84,12 +92,14 @@ class Edge(object):
             node_b : Node object
             value : any type
             fixed : bool
+            label : optional name for pretty printing
         """
         self._id = graph.add_edge(self)
         self._node_a = node_a
         self._node_b = node_b
         self._value = value
         self._fixed = fixed
+        self._label = label
 
     def polarity(self, node):
         """ Returns the polarity wrt. the given node.  If the edge is incoming
@@ -132,6 +142,12 @@ class Edge(object):
             value : any type
         """
         self._value = value
+
+    def __str__(self):
+        if self._label:
+            return self._label
+        else:
+            return object.__str__(self)
 
 class Graph(object):
     """ A graph object stores nodes and edges. """
@@ -270,7 +286,7 @@ class Graph(object):
                 row[var_to_row[v]] = c
             overconstrained_matrix[i] = row
         print(overconstrained_matrix)
-        print(variables)
+        print(map(str, variables))
 
         #[_, e] = qr(overconstrained_matrix, mode="r", pivoting=True)
         #constraint_matrix = overconstrained_matrix[e]

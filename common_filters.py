@@ -3,7 +3,7 @@
 
 from math import pi
 
-from graph import Node, Graph
+from graph import Node, Edge, Graph
 from resistor import Resistor
 from capacitor import Capacitor
 from filter import Filter
@@ -58,16 +58,18 @@ class InvertingOpAmpFilter(object):
         """
         graph = Graph()
 
-        input_node = Node(graph, fixed=True)
-        output_node = Node(graph, output=True)
-        ground_node = Node(graph, fixed=True, value=0)
+        input_node = Node(graph, fixed=True, label="V_in")
+        output_node = Node(graph, output=True, label="V_out")
+        ground_node = Node(graph, fixed=True, value=0, label="GND")
 
-        node_minus = Node(graph)
+        node_minus = Node(graph, label="V-")
+        i1_edge = Edge(graph, input_node, node_minus, label="I1")
+        i2_edge = Edge(graph, node_minus, output_node, label="I2")
 
         # Add resistor from input to V-
-        graph.add_component(Resistor(graph, r1, input_node, node_minus))
+        graph.add_component(Resistor(graph, r1, input_node, node_minus, i1_edge))
         # Add resistor from V- to output
-        graph.add_component(Resistor(graph, r2, node_minus, output_node))
+        graph.add_component(Resistor(graph, r2, node_minus, output_node, i2_edge))
         # Make op amp
         graph.add_component(Opamp(graph, node_minus, ground_node, output_node))
 
