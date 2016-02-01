@@ -89,16 +89,16 @@ class Diode(Component):
         nvt = 0.026
         v_d = self._node_a.value() - self._node_b.value()
 
-        THRES = 0.1
+        THRES = 1
         v_d = THRES if v_d > THRES else -THRES if v_d < -THRES else v_d
 
         c_0 = i_s * (np.exp(v_d / nvt) - (v_d / nvt) * np.exp(v_d / nvt) + 1)
         c_1 = i_s * np.exp(v_d / nvt) / nvt
 
         # Overflow handling
-        THRES = 1000
-        c_0 = THRES if c_0 > THRES else -THRES if c_0 < -THRES else c_0
-        c_1 = THRES if c_1 > THRES else -THRES if c_1 < -THRES else c_1
+        #THRES = 1000
+        #c_0 = THRES if c_0 > THRES else -THRES if c_0 < -THRES else c_0
+        #c_1 = THRES if c_1 > THRES else -THRES if c_1 < -THRES else c_1
 
         # Constraint is C_0 + C_1 * A - C_1 * B - I_D = 0
         coefficients = [c_1, -c_1, -1, c_0]

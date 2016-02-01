@@ -234,12 +234,14 @@ class Graph(object):
         constraints = []
         for component in self._components:
             constraints += component.constraints()
+        #print("Component constraints: {0}".format(len(constraints)))
 
         # Add constraints to fixed nodes
         for variable in variables:
             if isinstance(variable, Node) and variable.is_fixed():
                 new_constraint = ([1, -variable.value()], [variable, const_variable])
                 constraints.append(new_constraint)
+        #print("Fixed constraints: {0}".format(len(constraints)))
 
         # Add KCL constraints
         for variable in variables:
@@ -255,10 +257,12 @@ class Graph(object):
                     else:
                         new_constraint = (polarities, edges)
                         constraints.append(new_constraint)
+        #print("KCL constraints: {0}".format(len(constraints)))
 
         # Add a constraint for the constant "1"
         constraints.append(([1], [const_variable]))
         # Note that this should be the last row in the matrix!!
+        #print("All constraints: {0}".format(len(constraints)))
 
         return constraints
 
@@ -270,6 +274,8 @@ class Graph(object):
         # Gather variables and constraints
         variables = self.variables()
         constraints = self.constraints()
+        #print("Variables: {0}".format(len(variables)))
+        #print("Constraints: {0}".format(len(constraints)))
 
         # For each constraint add a row to the matrix
         # Constraints take the form (coefficients, variables)
@@ -292,6 +298,9 @@ class Graph(object):
         #print(e)
         #print(constraint_matrix)
 
+        constraint_matrix = overconstrained_matrix
+
+        """
         constraint_matrix = np.zeros((dim, dim))
         current_row = 0
         # TODO this code makes grown men cry
@@ -310,9 +319,21 @@ class Graph(object):
                 if rank == current_row + 1:
                     constraint_matrix[current_row] = new_row
                     current_row += 1
+                else:
+                    print("Constraint rejected:")
+                    print(new_row)
+                    print(map(str, variables))
+                    print("Current size: {0}".format(current_row))
             else:
                 constraint_matrix[current_row] = new_row
                 current_row += 1
+
+        #np.set_printoptions(precision=1)
+        #print(np.shape(constraint_matrix))
+        #print(len(variables))
+        #print(map(str, variables))
+        """
+
         b = np.append(np.zeros(dim - 1), [1])
         solution = linalg.solve(constraint_matrix, b)
         #csc = csc_matrix(constraint_matrix)

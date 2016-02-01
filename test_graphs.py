@@ -58,8 +58,8 @@ def test_resistor():
 def test_buffer():
     # Buffer
     graph = Graph()
-    node_out = Node(graph, output=True)
-    node_in = Node(graph, value=5, fixed=True)
+    node_out = Node(graph, output=True, source=True)
+    node_in = Node(graph, value=5, fixed=True, source=True)
     op_amp = Opamp(graph, node_a=node_out, node_b=node_in, node_out=node_out)
     graph.add_component(op_amp)
     graph.solve()

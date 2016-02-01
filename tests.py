@@ -14,5 +14,7 @@ def test(expected, actual, epsilon=0):
     """
     if abs(expected - actual) <= epsilon:
         print("PASS: Got {0}".format(actual))
+        return True
     else:
         print("FAIL: Expected {0}, got {1}".format(expected, actual))
+        return False

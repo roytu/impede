@@ -61,8 +61,8 @@ class InvertingOpAmpFilter(object):
         """
         graph = Graph()
 
-        input_node = Node(graph, fixed=True, source=True, label="V_in")
-        output_node = Node(graph, output=True, source=True, label="V_out")
+        input_node = Node(graph, fixed=True, source=True, label="Vin")
+        output_node = Node(graph, output=True, source=True, label="Vout")
         ground_node = Node(graph, value=0, fixed=True, source=True, label="GND")
 
         node_minus = Node(graph, label="V-")
@@ -83,3 +83,42 @@ class InvertingOpAmpFilter(object):
     def gain(r1, r2):
         """ Returns the gain. """
         return -float(r2) / r1
+
+class NoninvertingOpAmpFilter(object):
+    """ Non-inverting op amp """
+
+    @staticmethod
+    def make(r1, r2):
+        """ Returns a non-inverting op amp circuit with gain 1 + R2 / R1
+
+        Args:
+            r1 : resistance from v- to gnd
+            r2 : resistance from v- to vout
+
+        Returns:
+            Filter object
+        """
+        graph = Graph()
+
+        input_node = Node(graph, fixed=True, source=True, label="Vin")
+        output_node = Node(graph, output=True, source=True, label="Vout")
+
+        ground_node = Node(graph, value=0, fixed=True, source=True, label="GND")
+        node_minus = Node(graph, label="V-")
+        i1_edge = Edge(graph, node_minus, ground_node, label="I1")
+        i2_edge = Edge(graph, node_minus, output_node, label="I2")
+
+        # Add resistor from V- to GND
+        graph.add_component(Resistor(graph, r1, node_minus, ground_node, i1_edge))
+        # Add resistor from V- to output
+        graph.add_component(Resistor(graph, r2, node_minus, output_node, i2_edge))
+        # Make op amp
+        graph.add_component(Opamp(graph, node_minus, input_node, output_node))
+
+        noninverting_filter = Filter(graph, input_node, output_node)
+        return noninverting_filter
+
+    @staticmethod
+    def gain(r1, r2):
+        """ Returns the gain. """
+        return 1 + float(r2) / r1
