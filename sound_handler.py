@@ -64,13 +64,23 @@ class SoundHandler(object):
         wav_writer.setsampwidth(bytespersample)  # Number of bytes per sample
         wav_writer.setframerate(framerate)  # Sample rate
 
-        def sample_to_byte(s):
-            if abs(s) > peak:
-                s = peak if s > 0 else -peak
-            s = int((float(s) / peak) * 127) + 128
-            return chr(abs(s))
+        if bytespersample == 2:
+            bytefmt = "<h"
+        elif bytespersample == 1:
+            bytefmt = "<b"
+        else:
+            print("WARNING: Unsupported bytespersample")
 
-        data = "".join([sample_to_byte(s) for s in samples])
+        def sample_to_frame(sample):
+            # Renormalize
+            sample /= float(peak)
+            if abs(sample) > 1:
+                sample = sample / abs(sample)
+            sample *= 2 ** ((bytespersample * 8) - 1) - 1
+
+            return struct.pack(bytefmt, sample)
+
+        data = "".join([sample_to_frame(s) for s in samples])
         wav_writer.writeframes(data)
         wav_writer.close()
     @staticmethod

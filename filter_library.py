@@ -1,6 +1,9 @@
 
 """ Module that contains some example filters """
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 from graph import Node, Edge, Graph
 from resistor import Resistor
 from capacitor import Capacitor
@@ -18,11 +21,13 @@ def make_mxr_distortion_filter():
         Returns:
             Filter object
     """
+    probes = []
+
     graph = Graph()
 
     # Knobs
     gain_param = 0.5
-    mix_param = 0.5
+    mix_param = 0.1
 
     # Input / output
     node_in = Node(graph, fixed=True, source=True, label="Vin")
@@ -32,6 +37,9 @@ def make_mxr_distortion_filter():
     node_4_5 = Node(graph, value=4.5, fixed=True, source=True, label="4.5V")
     node_gnd = Node(graph, value=0, fixed=True, source=True, label="GND")
 
+    # Probe Vin
+    probes.append(node_in)
+
     # Op amp plus section
     edge = Edge(graph, node_in, node_gnd, label="I1")
     capacitor = Capacitor(graph, .001 * Units.u, node_in, node_gnd, edge)
@@ -39,8 +47,10 @@ def make_mxr_distortion_filter():
 
     node = Node(graph, label="V1")
     edge = Edge(graph, node_in, node, label="I2")
-    capacitor = Capacitor(graph, .01 * Units.u, node_in, node, edge)
-    graph.add_component(capacitor)
+    #capacitor = Capacitor(graph, .01 * Units.u, node_in, node, edge)
+    #graph.add_component(capacitor)
+    wire = Wire(graph, node_in, node, edge)
+    graph.add_component(wire)
 
     node_plus = Node(graph, label="V+")
     edge = Edge(graph, node, node_plus, label="I3")
@@ -63,9 +73,12 @@ def make_mxr_distortion_filter():
     graph.add_component(resistor)
 
     node_minus = Node(graph, label="V-")
+
     edge = Edge(graph, node_1, node_minus, label="I7")
-    capacitor = Capacitor(graph, 0.047 * Units.u, node_1, node_minus, edge)
-    graph.add_component(capacitor)
+    #capacitor = Capacitor(graph, 0.047 * Units.u, node_1, node_minus, edge)
+    #graph.add_component(capacitor)
+    wire = Wire(graph, node_1, node_minus, edge)
+    graph.add_component(wire)
 
     # Op amp
     node_output = Node(graph, source=True, label="Vo")
@@ -108,5 +121,8 @@ def make_mxr_distortion_filter():
     resistor = Resistor(graph, (1 - mix_param) * (10 * Units.K), node_out, node_gnd, edge)
     graph.add_component(resistor)
 
-    mxr_filter = Filter(graph, node_in, node_out)
+    # Probe Vout
+    probes.append(node_out)
+
+    mxr_filter = Filter(graph, node_in, node_out, probes=probes)
     return mxr_filter

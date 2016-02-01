@@ -85,8 +85,9 @@ class Diode(Component):
 
         which is the constraint we are using here
         """
-        i_s = 10 ** -12
-        nvt = 0.026
+        #i_s = 10 ** -12
+        i_s = 10 ** -6
+        nvt = 0.026 * 0.3 / 0.65
         v_d = self._node_a.value() - self._node_b.value()
 
         THRES = 1

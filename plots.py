@@ -89,6 +89,12 @@ def capacitor_charge_curve():
     r = 100
     c = 10 * Units.u
 
+    DURATION = 0.01
+
+    ts = irangef(0, DURATION, Config.time_step)
+    ts = np.array(ts)
+
+    # Model
     graph = Graph()
     node_5 = Node(graph, value=5, fixed=True, source=True)
     node_gnd = Node(graph, value=0, fixed=True, source=True)
@@ -101,22 +107,28 @@ def capacitor_charge_curve():
     edge = Edge(graph, node, node_gnd)
     graph.add_component(Capacitor(graph, c, node, node_gnd, edge))
 
-    ts, vs = [], []
-    for t in irangef(0, 1, Config.epsilon):
+    vs = []
+    for t in ts:
         graph.solve()
 
         v = node.value()
 
-        ts.append(t)
+        np.append(ts, t)
         vs.append(v)
 
     plt.title("Capacitor Charge Curve (R = 100 Ohms, C = 10 uF, V = 5 V)")
     plt.xlabel("Time (s)")
     plt.ylabel("Voltage (V)")
-    plt.plot(ts, vs)
+    plt.plot(ts, vs, label="Model")
+
+    # Plot ideal
+    vs_ideal = 5 * (1 - np.exp(-ts / (r * c)))
+    plt.plot(ts, vs_ideal, label="Ideal")
+
+    plt.legend()
     plt.show()
 
 if __name__ == "__main__":
-    diode_iv_curve()
+    #diode_iv_curve()
     #lowpass_filter_transfer_curve()
-    #capacitor_charge_curve()
+    capacitor_charge_curve()
