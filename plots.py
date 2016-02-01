@@ -1,6 +1,7 @@
 
 """ Scripts to run that plot crucial circuits """
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 from common_filters import LowPassFilter
@@ -15,6 +16,11 @@ from util import irangef
 
 def diode_iv_curve():
     """ Plots the IV curve of a diode. """
+    plt.title("Diode IV Curve")
+    plt.xlabel("Voltage (V)")
+    plt.ylabel("Current (A)")
+
+    # Plot ideal
     voltages, currents = [], []
     for v in irangef(0.6, 0.8, 0.01):
         graph = Graph()
@@ -27,10 +33,32 @@ def diode_iv_curve():
         voltages.append(v)
         currents.append(edge_i.value())
 
-    plt.title("Diode IV Curve")
-    plt.xlabel("Voltage (V)")
-    plt.ylabel("Current (A)")
-    plt.plot(voltages, currents)
+    plt.plot(voltages, currents, label="Voltage varies continuously")
+
+    # Plot random
+    SAMPLES = 1000
+
+    currents = []
+    voltages = np.random.random(SAMPLES) * 0.2 + 0.6
+    graph = Graph()
+    node_a = Node(graph, value=0, fixed=True)
+    node_b = Node(graph, value=0, fixed=True)
+    edge_i = Edge(graph, node_a, node_b)
+    diode = Diode(graph, node_a, node_b, edge_i)
+    graph.add_component(diode)
+
+    for v in voltages:
+        node_a.set_value(v)
+        graph.solve()
+
+        currents.append(edge_i.value())
+
+    # Sort
+    currents = (np.array(currents))[voltages.argsort()]
+    voltages.sort()
+
+    plt.plot(voltages, currents, label="Voltage varies randomly")
+    plt.legend()
     plt.show()
 
 def lowpass_filter_transfer_curve():
@@ -89,6 +117,6 @@ def capacitor_charge_curve():
     plt.show()
 
 if __name__ == "__main__":
-    #diode_iv_curve()
+    diode_iv_curve()
     #lowpass_filter_transfer_curve()
-    capacitor_charge_curve()
+    #capacitor_charge_curve()
