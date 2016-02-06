@@ -7,7 +7,7 @@ IDs should be a type that supports equality.
 
 import numpy as np
 from numpy import linalg
-from scipy.sparse import csc_matrix
+import scipy.sparse
 from scipy.sparse.linalg import spsolve
 from scipy.linalg import qr
 
@@ -274,8 +274,6 @@ class Graph(object):
         # Gather variables and constraints
         variables = self.variables()
         constraints = self.constraints()
-        #print("Variables: {0}".format(len(variables)))
-        #print("Constraints: {0}".format(len(constraints)))
 
         # For each constraint add a row to the matrix
         # Constraints take the form (coefficients, variables)
@@ -284,60 +282,33 @@ class Graph(object):
             var_to_row[variable] = i
 
         dim = len(variables)
-        dim_cons = len(constraints)
-        overconstrained_matrix = np.zeros((dim_cons, dim))
+        #dim_cons = len(constraints)
+        #constraint_matrix = scipy.sparse.lil_matrix((dim, dim))
+        constraint_matrix = np.zeros((dim, dim))
+
+        """
+        rows = np.array([])
+        cols = np.array([])
+        data = np.array([])
+        for i, (cs, vs) in enumerate(constraints):
+            rows = np.concatenate([rows, np.ones(len(cs)) * i])
+            cols = np.concatenate([cols, np.array([var_to_row[v] for v in vs])])
+            data = np.concatenate([data, cs])
+        """
+
         for i, (cs, vs) in enumerate(constraints):
             row = np.zeros(dim)
             for c, v in zip(cs, vs):
                 row[var_to_row[v]] = c
-            overconstrained_matrix[i] = row
-
-        #[_, e] = qr(overconstrained_matrix, mode="r", pivoting=True)
-        #constraint_matrix = overconstrained_matrix[e]
-        #print(overconstrained_matrix)
-        #print(e)
-        #print(constraint_matrix)
-
-        constraint_matrix = overconstrained_matrix
-
-        """
-        constraint_matrix = np.zeros((dim, dim))
-        current_row = 0
-        # TODO this code makes grown men cry
-        for row_index in range(len(overconstrained_matrix)):
-            new_row = overconstrained_matrix[row_index]
-
-            # Construct the current matrix
-            if current_row > 0:
-                m = np.zeros((current_row + 1, dim))
-                for r in range(current_row):
-                    m[r] = constraint_matrix[r]
-                m[-1] = new_row
-                m = m.transpose()
-                #rank = linalg.lstsq(m, np.zeros((dim, 1)))[2]
-                rank = linalg.matrix_rank(m)
-                if rank == current_row + 1:
-                    constraint_matrix[current_row] = new_row
-                    current_row += 1
-                else:
-                    print("Constraint rejected:")
-                    print(new_row)
-                    print(map(str, variables))
-                    print("Current size: {0}".format(current_row))
-            else:
-                constraint_matrix[current_row] = new_row
-                current_row += 1
-
-        #np.set_printoptions(precision=1)
-        #print(np.shape(constraint_matrix))
-        #print(len(variables))
-        #print(map(str, variables))
-        """
+            constraint_matrix[i] = row
+        #constraint_matrix = scipy.sparse.csc_matrix((data, (rows, cols)), shape=(dim, dim))
 
         b = np.append(np.zeros(dim - 1), [1])
         solution = linalg.solve(constraint_matrix, b)
         #csc = csc_matrix(constraint_matrix)
         #solution = spsolve(csc, b)
+        #dok = scipy.sparse.csc_matrix(constraint_matrix)
+        #solution = spsolve(constraint_matrix, b)
 
         # Apply the solution to the graph
         for variable, value in zip(variables, solution):
