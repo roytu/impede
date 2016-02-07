@@ -58,7 +58,7 @@ class Grid extends Drawable
     zoomIn: ->
         @tickCount-- if @tickCount > @minTickCount
 
-    zoomIn: ->
+    zoomOut: ->
         @tickCount++ if @tickCount < @maxTickCount
 
     getTickSize: ->
