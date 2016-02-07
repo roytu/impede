@@ -1,0 +1,57 @@
+a {
+    text-decoration: underline;
+    padding: 2px;
+}
+
+svg {
+    margin: 0px;
+    padding: 0px;
+    position: absolute;
+}
+
+.grid path,
+.grid line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+  opacity: 0.5;
+}
+
+.grid .tick {
+    stroke: lightgrey;
+    opacity: 0.7;
+}
+.grid path {
+    stroke-width: 0;
+}
+
+.leftArea {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+    width: 200px;
+}
+
+.rightArea {
+    float: right;
+    width: 200px;
+}
+
+.titleArea {
+    word-wrap: break-word;
+    margin: 10px;
+    height: 400px;
+}
+
+.statArea {
+    word-wrap: break-word;
+    margin: 10px;
+}
+
+.title {
+    font: 18px sans-serif;
+}
+.text {
+    font: 10px sans-serif;
+    position: relative;
+}
