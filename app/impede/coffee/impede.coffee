@@ -9,15 +9,7 @@ root.init = ->
                 return true
             return false
         
-        Elements =
-            WIRE: 0
-            RESISTOR: 1
-            CAPACITOR: 2
-            INDUCTOR: 3
-            OPAMP: 4
-            V_IN: 5
-            V_OUT: 6
-            V_SRC: 7
+        Elements = window.Elements
         
         SA = new window.StatArea()
         DA = new window.DescArea()

@@ -1,5 +1,7 @@
 class @InductorSprite extends Sprite
     @constructSVG: (x, y, v) ->
+        DA = window.DescArea()
+
         toDStr = (lst) ->
             return d3.svg.line()
                     .x((d) -> return d.x)

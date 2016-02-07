@@ -22,13 +22,13 @@ class @Metastate
         if @selected?
             switch @selected
                 when Elements.RESISTOR
-                    ResistorSprite = window.ResistorSprite()
+                    ResistorSprite = window.ResistorSprite
                     @_ghost = ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0)
                 when Elements.CAPACITOR
-                    CapacitorSprite = window.CapacitorSprite()
+                    CapacitorSprite = window.CapacitorSprite
                     @_ghost = CapacitorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0)
                 when Elements.INDUCTOR
-                    InductorSprite = window.InductorSprite()
+                    InductorSprite = window.InductorSprite
                     @_ghost = InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0)
 
     addElement: (mx, my) ->
