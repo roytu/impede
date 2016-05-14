@@ -8,6 +8,10 @@ class @Metastate
         else
             instance = this
         @selected = null
+        @value_text = ""
+        @value_unit = Units.i
+        @_mx = 0
+        @_my = 0
         @_ghost = null
         @_svgs = []
 
@@ -15,29 +19,30 @@ class @Metastate
         DA = window.DescArea()
         @_ghost = DA.svg.append("svg")
 
-    updateGhost: (mx, my) ->
+    updateGhost: (mx=@_mx, my=@_my) ->
         if @_ghost?
             @_ghost.remove()
 
         if @selected?
+            @_mx = mx
+            @_my = my
             switch @selected
                 when Elements.RESISTOR
                     ResistorSprite = window.ResistorSprite
-                    @_ghost = ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0)
+                    @_ghost = ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(@value_text))
                 when Elements.CAPACITOR
                     CapacitorSprite = window.CapacitorSprite
-                    @_ghost = CapacitorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0)
+                    @_ghost = CapacitorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(@value_text))
                 when Elements.INDUCTOR
                     InductorSprite = window.InductorSprite
-                    @_ghost = InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0)
+                    @_ghost = InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(@value_text))
 
-    addElement: (mx, my) ->
+    addElement: (mx, my, v=0) ->
         switch @selected
             when Elements.RESISTOR
-                @config.resistors.push([mx, my])
+                @config.resistors.push([mx, my, v])
 
         @updateSVGs()
-        @updateConfigbox()
 
     removeElement: (mx, my) ->
         # Explicitly remove HTML by rounding
@@ -52,7 +57,6 @@ class @Metastate
             if (Math.sqrt(Math.pow(x[0] - mpos[0], 2) + Math.pow(x[1] - mpos[1], 2)) < 1)
                 arr.splice(i, 1)
                 @updateSVGs()
-                @updateConfigbox()
                 return
 
         pos = Grid.getGridPos(mx, my)
@@ -70,7 +74,6 @@ class @Metastate
                 if x[0] == pos[0] && x[1] == pos[1]
                     arr.splice(i, 1)
                     @updateSVGs()
-                    @updateConfigbox()
                     return
 
     updateSVGs: ->
@@ -79,7 +82,8 @@ class @Metastate
         )
         @_svgs = []
         # Redraw everything
-        #  TODO
+        for [x, y, v] in @config.resistors
+            @_svgs.push(ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
 
     load: (jsonStr) ->
         State = window.State
@@ -89,10 +93,6 @@ class @Metastate
             State.stop()
             State.config.fromString(jsonStr)
             @updateSVGs()
-            @updateConfigbox()
 
-    updateConfigbox: ->
-        SA = window.StatArea
-        State = window.State
-
-        SA._configbox.text(State.config.toString())
+    getValue: ->
+        Units.toValue(parseFloat(@value_text), @value)

@@ -26,6 +26,8 @@
         return Metastate.updateGhost(d3.mouse(this)[0], d3.mouse(this)[1]);
       });
       this.svg.on("click", function(e) {
+        var Metastate;
+        Metastate = window.Metastate();
         switch (Metastate.selected) {
           case Elements.RESISTOR:
           case Elements.CAPACITOR:
@@ -34,7 +36,7 @@
           case Elements.V_IN:
           case Elements.V_OUT:
           case Elements.V_SRC:
-            return Metastate.addElement(d3.mouse(this)[0], d3.mouse(this)[1]);
+            return Metastate.addElement(d3.mouse(this)[0], d3.mouse(this)[1], Metastate.getValue());
         }
       });
     }

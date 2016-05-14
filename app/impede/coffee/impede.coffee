@@ -42,8 +42,20 @@ root.init = ->
                   Metastate.updateSVGs()
                 when 82  # R
                   Metastate.selected = Elements.RESISTOR
+                  Metastate.updateGhost()
                 when 67  # C
                   Metastate.selected = Elements.CAPACITOR
+                  Metastate.updateGhost()
                 when 76  # L
                   Metastate.selected = Elements.INDUCTOR
+                  Metastate.updateGhost()
+                when 48, 49, 50, 51, 52, 53, 54, 55, 56, 57  # Numbers 0 - 9
+                  DA = window.DescArea()
+                  Metastate.value_text += "#{e.keyCode - 48}"
+                  Metastate.updateGhost()
+                when 8  # Backspace
+                  e.preventDefault()
+                  DA = window.DescArea()
+                  Metastate.value_text = Metastate.value_text.slice(0, -1)
+                  Metastate.updateGhost()
         )

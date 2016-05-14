@@ -36,6 +36,7 @@ class @DescArea
         )
 
         @svg.on("click", (e) ->
+            Metastate = window.Metastate()
             switch Metastate.selected
                 when   Elements.RESISTOR
                      , Elements.CAPACITOR
@@ -44,5 +45,7 @@ class @DescArea
                      , Elements.V_IN
                      , Elements.V_OUT
                      , Elements.V_SRC
-                           Metastate.addElement(d3.mouse(this)[0], d3.mouse(this)[1])
+                           Metastate.addElement(d3.mouse(this)[0],
+                                                d3.mouse(this)[1],
+                                                Metastate.getValue())
         )

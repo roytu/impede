@@ -48,6 +48,6 @@ class @ResistorSprite extends Sprite
             .attr("shape-rendering", "crispEdges")
             .style("font-size", "16px")
         svg.updateText = (v) ->
-            svg.valueText.text(v + " Ω")
+            svg.valueText.text("#{v} Ω")
         svg.updateText(v)
         return svg

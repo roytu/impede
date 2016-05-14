@@ -40,16 +40,21 @@ class Filter(object):
             list of voltages (float)
         """
         output_voltages = []
+
+        input_voltage_var = Symbol("v_i")
+        self._input_node.set_value(input_voltage_var)
+
+        # output_voltage = self._output_node.value()  # this should be here ish
+        func = self._graph.solve()
+
+        # TODO add probes back in
+        #for probe in self._probes:
+        #    if probe not in self._probe_values:
+        #        self._probe_values[probe] = []
+        #    self._probe_values[probe].append(probe.value())
         for i, input_voltage in enumerate(voltages):
-            self._input_node.set_value(input_voltage)
-            self._graph.solve()
-
-            for probe in self._probes:
-                if probe not in self._probe_values:
-                    self._probe_values[probe] = []
-                self._probe_values[probe].append(probe.value())
-
-            output_voltage = self._output_node.value()
+            # TODO perform substitution and evaluate
+            output_voltage = func(input_voltage)
             output_voltages.append(output_voltage)
 
             if i % 100 == 0:

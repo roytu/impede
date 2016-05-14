@@ -74,6 +74,7 @@ class Node(object):
             value : any type
         """
         self._value = value
+
     def __str__(self):
         if self._label:
             return self._label
@@ -271,6 +272,7 @@ class Graph(object):
         TODO THIS CODE SUCKS
         """
         const_variable = "1"
+
         # Gather variables and constraints
         variables = self.variables()
         constraints = self.constraints()
@@ -282,33 +284,17 @@ class Graph(object):
             var_to_row[variable] = i
 
         dim = len(variables)
-        #dim_cons = len(constraints)
-        #constraint_matrix = scipy.sparse.lil_matrix((dim, dim))
         constraint_matrix = np.zeros((dim, dim))
-
-        """
-        rows = np.array([])
-        cols = np.array([])
-        data = np.array([])
-        for i, (cs, vs) in enumerate(constraints):
-            rows = np.concatenate([rows, np.ones(len(cs)) * i])
-            cols = np.concatenate([cols, np.array([var_to_row[v] for v in vs])])
-            data = np.concatenate([data, cs])
-        """
 
         for i, (cs, vs) in enumerate(constraints):
             row = np.zeros(dim)
             for c, v in zip(cs, vs):
                 row[var_to_row[v]] = c
             constraint_matrix[i] = row
-        #constraint_matrix = scipy.sparse.csc_matrix((data, (rows, cols)), shape=(dim, dim))
 
+        # Solve the linear equation
         b = np.append(np.zeros(dim - 1), [1])
         solution = linalg.solve(constraint_matrix, b)
-        #csc = csc_matrix(constraint_matrix)
-        #solution = spsolve(csc, b)
-        #dok = scipy.sparse.csc_matrix(constraint_matrix)
-        #solution = spsolve(constraint_matrix, b)
 
         # Apply the solution to the graph
         for variable, value in zip(variables, solution):

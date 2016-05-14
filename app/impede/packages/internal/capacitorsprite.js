@@ -11,7 +11,8 @@
     }
 
     CapacitorSprite.constructSVG = function(x, y, v) {
-      var svg, toDStr;
+      var DA, svg, toDStr;
+      DA = window.DescArea();
       toDStr = function(lst) {
         return d3.svg.line().x(function(d) {
           return d.x;

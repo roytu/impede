@@ -53,7 +53,7 @@
       }
     };
 
-    Grid.prototype.zoomIn = function() {
+    Grid.prototype.zoomOut = function() {
       if (this.tickCount < this.maxTickCount) {
         return this.tickCount++;
       }

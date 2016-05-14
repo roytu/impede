@@ -13,6 +13,10 @@
         instance = this;
       }
       this.selected = null;
+      this.value_text = "";
+      this.value_unit = Units.i;
+      this._mx = 0;
+      this._my = 0;
       this._ghost = null;
       this._svgs = [];
     }
@@ -25,31 +29,41 @@
 
     Metastate.prototype.updateGhost = function(mx, my) {
       var CapacitorSprite, InductorSprite, ResistorSprite;
+      if (mx == null) {
+        mx = this._mx;
+      }
+      if (my == null) {
+        my = this._my;
+      }
       if (this._ghost != null) {
         this._ghost.remove();
       }
       if (this.selected != null) {
+        this._mx = mx;
+        this._my = my;
         switch (this.selected) {
           case Elements.RESISTOR:
-            ResistorSprite = window.ResistorSprite();
-            return this._ghost = ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0);
+            ResistorSprite = window.ResistorSprite;
+            return this._ghost = ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(this.value_text));
           case Elements.CAPACITOR:
-            CapacitorSprite = window.CapacitorSprite();
-            return this._ghost = CapacitorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0);
+            CapacitorSprite = window.CapacitorSprite;
+            return this._ghost = CapacitorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(this.value_text));
           case Elements.INDUCTOR:
-            InductorSprite = window.InductorSprite();
-            return this._ghost = InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my), 0);
+            InductorSprite = window.InductorSprite;
+            return this._ghost = InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(this.value_text));
         }
       }
     };
 
-    Metastate.prototype.addElement = function(mx, my) {
+    Metastate.prototype.addElement = function(mx, my, v) {
+      if (v == null) {
+        v = 0;
+      }
       switch (this.selected) {
         case Elements.RESISTOR:
-          this.config.resistors.push([mx, my]);
+          this.config.resistors.push([mx, my, v]);
       }
-      this.updateSVGs();
-      return this.updateConfigbox();
+      return this.updateSVGs();
     };
 
     Metastate.prototype.removeElement = function(mx, my) {
@@ -63,7 +77,6 @@
         if (Math.sqrt(Math.pow(x[0] - mpos[0], 2) + Math.pow(x[1] - mpos[1], 2)) < 1) {
           arr.splice(i, 1);
           this.updateSVGs();
-          this.updateConfigbox();
           return;
         }
       }
@@ -76,7 +89,6 @@
           if (x[0] === pos[0] && x[1] === pos[1]) {
             arr.splice(i, 1);
             this.updateSVGs();
-            this.updateConfigbox();
             return;
           }
         }
@@ -84,10 +96,18 @@
     };
 
     Metastate.prototype.updateSVGs = function() {
+      var k, len, ref, ref1, results, v, x, y;
       this._svgs.forEach(function(svg) {
         return svg.remove();
       });
-      return this._svgs = [];
+      this._svgs = [];
+      ref = this.config.resistors;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        ref1 = ref[k], x = ref1[0], y = ref1[1], v = ref1[2];
+        results.push(this._svgs.push(ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v))));
+      }
+      return results;
     };
 
     Metastate.prototype.load = function(jsonStr) {
@@ -99,16 +119,12 @@
       if (jsonStr != null) {
         State.stop();
         State.config.fromString(jsonStr);
-        this.updateSVGs();
-        return this.updateConfigbox();
+        return this.updateSVGs();
       }
     };
 
-    Metastate.prototype.updateConfigbox = function() {
-      var SA, State;
-      SA = window.StatArea;
-      State = window.State;
-      return SA._configbox.text(State.config.toString());
+    Metastate.prototype.getValue = function() {
+      return Units.toValue(parseFloat(this.value_text), this.value);
     };
 
     return Metastate;

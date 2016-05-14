@@ -13,18 +13,20 @@ Package.describe({
 Package.onUse(function(api) {
   api.versionsFrom('1.2.1');
   api.use('ecmascript');
+  api.addFiles('elements.js');
+  api.addFiles('units.js');
   api.addFiles('statarea.js');
   api.addFiles('descarea.js');
   api.addFiles('drawable.js');
   api.addFiles('grid.js');
   api.addFiles('configuration.js');
-  api.addFiles('metastate.js');
   api.addFiles('sprite.js');
   api.addFiles('wiresprite.js');
   api.addFiles('wireghostsprite.js');
   api.addFiles('resistorsprite.js');
   api.addFiles('inductorsprite.js');
   api.addFiles('capacitorsprite.js');
+  api.addFiles('metastate.js');
   api.addFiles('state.js');
   api.addFiles('impede.js');
 });

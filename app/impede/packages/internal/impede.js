@@ -21,16 +21,7 @@
           return false;
         }
       });
-      Elements = {
-        WIRE: 0,
-        RESISTOR: 1,
-        CAPACITOR: 2,
-        INDUCTOR: 3,
-        OPAMP: 4,
-        V_IN: 5,
-        V_OUT: 6,
-        V_SRC: 7
-      };
+      Elements = window.Elements;
       SA = new window.StatArea();
       DA = new window.DescArea();
       Drawable = window.Drawable;
@@ -56,11 +47,32 @@
             Grid.redraw();
             return Metastate.updateSVGs();
           case 82:
-            return Metastate.selected = Elements.RESISTOR;
+            Metastate.selected = Elements.RESISTOR;
+            return Metastate.updateGhost();
           case 67:
-            return Metastate.selected = Elements.CAPACITOR;
+            Metastate.selected = Elements.CAPACITOR;
+            return Metastate.updateGhost();
           case 76:
-            return Metastate.selected = Elements.INDUCTOR;
+            Metastate.selected = Elements.INDUCTOR;
+            return Metastate.updateGhost();
+          case 48:
+          case 49:
+          case 50:
+          case 51:
+          case 52:
+          case 53:
+          case 54:
+          case 55:
+          case 56:
+          case 57:
+            DA = window.DescArea();
+            Metastate.value_text += "" + (e.keyCode - 48);
+            return Metastate.updateGhost();
+          case 8:
+            e.preventDefault();
+            DA = window.DescArea();
+            Metastate.value_text = Metastate.value_text.slice(0, -1);
+            return Metastate.updateGhost();
         }
       });
     }
