@@ -58,7 +58,7 @@ class Filter(object):
 
             output_voltages.append(output_voltage)
 
-            #print(i)
+            print(i)
         return output_voltages
 
     def plot_probes(self):

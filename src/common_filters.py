@@ -7,9 +7,9 @@ NOTE THAT ALL FILTERS ASSUME HIGH INPUT IMPEDANCE!!
 from math import pi
 
 from graph import Node, Edge, Graph
-from components.resistor import Resistor
-from components.capacitor import Capacitor
-from components.opamp import Opamp
+from resistor import Resistor
+from capacitor import Capacitor
+from opamp import Opamp
 from filter import Filter
 
 class LowPassFilter(object):

@@ -12,6 +12,9 @@ import scipy.sparse
 from scipy.sparse.linalg import spsolve
 from scipy.linalg import qr
 
+from func import Func
+from constraint import Constraint
+
 class Node(object):
     """ A node object designates each point in the graph.
     On initialization, the node is assigned an ID by the graph. """
@@ -213,18 +216,14 @@ class Graph(object):
         """ Return a list of variables to be used in the matrix solver.
 
         Returns:
-            list of Nodes, Edges, tuples, or strings
+            list of Nodes, Edges, or tuples
         """
-        const_variable = "1"
         # Gather variables and constraints
         variables = set([])
         for component in self._components:
             variables = variables.union(set(component.variables()))
 
-        variables -= set([const_variable])
-        variables = list(variables)
-        variables.append(const_variable)
-        return variables
+        return list(variables)
 
     def sympy_variables(self):
         """ Return a list of sympy variables associated with the variable
@@ -243,7 +242,7 @@ class Graph(object):
         Returns:
             List of tuples (coefficients, variables)
         """
-        const_variable = "1"
+        const_var = "1"
         variables = self.variables()
 
         constraints = []
@@ -252,30 +251,35 @@ class Graph(object):
         #print("Component constraints: {0}".format(len(constraints)))
 
         # Add constraints to fixed nodes
-        for variable in variables:
-            if isinstance(variable, Node) and variable.is_fixed():
-                new_constraint = ([1, -variable.value()], [variable, const_variable])
-                constraints.append(new_constraint)
+        for var in variables:
+            if isinstance(var, Node) and var.is_fixed():
+                cs = [1]
+                xs = [var]
+                b = var.value()
+
+                constraints.append(Constraint(cs, xs, b))
         #print("Fixed constraints: {0}".format(len(constraints)))
 
         # Add KCL constraints
-        for variable in variables:
-            if isinstance(variable, Node):
+        for var in variables:
+            if isinstance(var, Node):
                 # Get all edges and their directions wrt. this node
-                edges, polarities = self.connected_edges(variable)
-                if not variable.is_source():
+                edges, polarities = self.connected_edges(var)
+                if not var.is_source():
                     if len(edges) <= 1:
-                        if variable.is_output():
+                        if var.is_output():
                             # Outputs assume an infinite impedence
-                            new_constraint = ([1], edges)
-                            constraints.append(new_constraint)
+                            cs = [1]
+                            xs = [edges]
+                            constraints.append(Constraint(cs, xs))
                     else:
-                        new_constraint = (polarities, edges)
-                        constraints.append(new_constraint)
+                        cs = polarities
+                        xs = edges
+                        constraints.append(Constraint(cs, xs))
         #print("KCL constraints: {0}".format(len(constraints)))
 
         # Add a constraint for the constant "1"
-        constraints.append(([1], [const_variable]))
+        #constraints.append(([1], [const_variable]))
         # Note that this should be the last row in the matrix!!
         #print("All constraints: {0}".format(len(constraints)))
 
@@ -289,7 +293,7 @@ class Graph(object):
         """
         subs = {}
         for component in self._components:
-            for k, v in component.substitutions():
+            for k, v in component.substitutions().items():
                 subs[k] = v
         return subs
 
@@ -311,60 +315,47 @@ class Graph(object):
         subs.update(self.internal_subs())
 
         assignments = {}
-        for variable, expr in self._solution.items():
-            #value = expr.subs(subs)
-            value = expr(subs)
+        for var, expr in self._solution.items():
             # Store this in an intermediate dictionary
-            assignments[variable] = value
+            assignments[var] = expr(subs)
 
         # Perform all assignments
-        for variable, value in assignments.items():
-            variable.set_value(value)
+        for var, value in assignments.items():
+            var.set_value(value)
 
     def solve(self):
         """ Solves the matrix symbolically and stores a mapping between each
             hanging symbol and the expression to evaluate that updates
             that symbol.
         """
-        const_variable = "1"
-
         # Gather variables and constraints
         variables = self.variables()
         constraints = self.constraints()
 
-        # For each constraint add a row to the matrix
-        # Constraints take the form (coefficients, variables)
-        var_to_row = dict()
-        for i, variable in enumerate(variables):
-            var_to_row[variable] = i
+        # Allocate variables to rows
+        var2row = dict()
+        for i, var in enumerate(variables):
+            var2row[var] = i
 
-        dim = len(variables)
-        constraint_matrix = sy.zeros(dim, dim)
+        # Determine size of matrix
+        N = len(variables)
+        A = sy.zeros(N, N)
+        b = sy.zeros(N, 1)
 
-        for i, (cs, vs) in enumerate(constraints):
-            row = sy.zeros(1, dim)
-            for c, v in zip(cs, vs):
-                row[var_to_row[v]] = c
-            constraint_matrix[i, :] = row
+        # Allocate each constraint to each row
+        for i, cons in enumerate(constraints):
+            # Build row one variable at a time
+            row = sy.zeros(1, N)
+            for c, x in zip(cons.cs, cons.xs):
+                row[var2row[x]] = c
+
+            # Add to matrix
+            A[i, :] = row
+            b[i] = cons.b
 
         # Solve the linear equation
-        b = sy.zeros(dim, 1)
-        b[-1] = 1
-        xs = constraint_matrix.LUsolve(b)
+        xs = A.LUsolve(b)
         self._solution = {}
-        for variable, expr in zip(variables, xs):
-            if isinstance(variable, Node) or isinstance(variable, Edge):
-                # Function should take a dictionary of substitutions
-                # and return a float
-                def g(expr2):
-                    def f(subs):
-                        """ Function takes a dictionary of substitutions and
-                            returns a float that represents the evaluation
-                            of this expression.
-                        """
-                        if variable not in self.__sub_func:
-                            sub_vars = subs.keys()
-                            self.__sub_func[variable] = sy.lambdify(tuple(sub_vars), expr2)
-                        return self.__sub_func[variable](*subs.values())
-                    return f
-                self._solution[variable] = g(expr)
+        for var, expr in zip(variables, xs):
+            if isinstance(var, Node) or isinstance(var, Edge):
+                self._solution[var] = Func(expr)

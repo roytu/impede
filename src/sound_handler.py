@@ -77,10 +77,11 @@ class SoundHandler(object):
             if abs(sample) > 1:
                 sample = sample / abs(sample)
             sample *= 2 ** ((bytespersample * 8) - 1) - 1
+            sample = int(sample)
 
             return struct.pack(bytefmt, sample)
 
-        data = "".join([sample_to_frame(s) for s in samples])
+        data = b"".join([sample_to_frame(s) for s in samples])
         wav_writer.writeframes(data)
         wav_writer.close()
     @staticmethod

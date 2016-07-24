@@ -5,11 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from graph import Node, Edge, Graph
-from components.resistor import Resistor
-from components.capacitor import Capacitor
-from components.diode import Diode
-from components.opamp import Opamp
-from components.wire import Wire
+from resistor import Resistor
+from capacitor import Capacitor
+from diode import Diode
+from opamp import Opamp
+from wire import Wire
 from units import Units
 from filter import Filter
 
