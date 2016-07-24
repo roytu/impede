@@ -1,6 +1,9 @@
 
 """ Filter module """
 
+from collections import defaultdict
+
+import sympy as sy
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,7 +30,11 @@ class Filter(object):
         if not probes:
             probes = []
         self._probes = probes
-        self._probe_values = dict()
+        self._probe_values = defaultdict(list)
+
+        self._input_node_var = sy.Symbol("vin")
+        self._input_node.set_value(self._input_node_var)
+        self._graph.solve()
 
     def execute(self, voltages):
         """ Given a list of voltages, return a new list of voltages
@@ -40,26 +47,18 @@ class Filter(object):
             list of voltages (float)
         """
         output_voltages = []
+        input_voltage_var = self._input_node_var
 
-        input_voltage_var = Symbol("v_i")
-        self._input_node.set_value(input_voltage_var)
-
-        # output_voltage = self._output_node.value()  # this should be here ish
-        func = self._graph.solve()
-
-        # TODO add probes back in
-        #for probe in self._probes:
-        #    if probe not in self._probe_values:
-        #        self._probe_values[probe] = []
-        #    self._probe_values[probe].append(probe.value())
         for i, input_voltage in enumerate(voltages):
-            # TODO perform substitution and evaluate
-            output_voltage = func(input_voltage)
+            self._graph.update({input_voltage_var: input_voltage})
+            output_voltage = self._output_node.value()
+
+            for probe in self._probes:
+                self._probe_values[probe].append(probe.value())
+
             output_voltages.append(output_voltage)
 
-            if i % 100 == 0:
-                print("{0} / {1}".format(i, len(voltages)))
-        print(output_voltages)
+            #print(i)
         return output_voltages
 
     def plot_probes(self):

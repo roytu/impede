@@ -2,11 +2,11 @@
 """ A component that designates a diode. """
 
 import numpy as np
+import sympy as sy
 
 from graph import Node, Edge
-from component import Component
 
-class Diode(Component):
+class Diode(object):
     """ Diode component """
     def __init__(self, graph, node_a=None, node_b=None, edge_i=None):
         """ Initializes a diode with two nodes.  Current goes from
@@ -32,6 +32,8 @@ class Diode(Component):
         self._node_a = node_a
         self._node_b = node_b
         self._edge_i = edge_i
+
+        self._dv = sy.Symbol("dv" + str(self))  # TODO better name mangling
 
     def node_a(self):
         """ Returns node A.
@@ -65,6 +67,17 @@ class Diode(Component):
         """
         return set([self._node_a, self._node_b, self._edge_i, "1"])
 
+    def substitutions(self):
+        """ Return a dictionary mapping each symbol to a value.  Return
+            an empty dictionary if no substitutions exist
+
+            Returns:
+                dictionary from sympy variable to value
+        """
+        mappings = {}
+        mappings[self._dv] = self._node_a.value() - self._node_b.value()
+        return mappings
+
     def constraints(self):
         """ Returns a list of constraints that must be solved.
         A constraint is a tuple (coefficients, variables), where
@@ -88,10 +101,11 @@ class Diode(Component):
         #i_s = 10 ** -12
         i_s = 10 ** -6
         nvt = 0.026 * 0.3 / 0.65
-        v_d = self._node_a.value() - self._node_b.value()
+        v_d = self._dv
 
-        THRES = 1
-        v_d = THRES if v_d > THRES else -THRES if v_d < -THRES else v_d
+        # Thresholding
+        #THRES = 1
+        #v_d = THRES if v_d > THRES else -THRES if v_d < -THRES else v_d
 
         c_0 = i_s * (np.exp(v_d / nvt) - (v_d / nvt) * np.exp(v_d / nvt) + 1)
         c_1 = i_s * np.exp(v_d / nvt) / nvt

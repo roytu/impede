@@ -1,11 +1,14 @@
 
 """ Module to test example graphs. """
 
+import sympy as sy
+
 from config import Config
 from tests import test
 from graph import Node, Edge, Graph
 from components.wire import Wire
 from components.resistor import Resistor
+from components.capacitor import Capacitor
 from components.opamp import Opamp
 from common_filters import InvertingOpAmpFilter
 
@@ -17,6 +20,7 @@ def test_wire():
     wire = Wire(graph, node_a, node_b)
     graph.add_component(wire)
     graph.solve()
+    graph.update()
     # Test that the voltage at both points is equal
     return test(5, node_b.value(), epsilon=Config.epsilon)
 
@@ -38,6 +42,7 @@ def test_chained_wires():
     graph.add_component(wire)
 
     graph.solve()
+    graph.update()
 
     # Test that the voltage at both points is equal
     return test(10, node_d.value(), epsilon=Config.epsilon)
@@ -46,14 +51,30 @@ def test_resistor():
     """ Test graphs. """
     # Simple resistor
     graph = Graph()
+
     node_a = Node(graph, value=5, fixed=True)
     node_b = Node(graph, value=0, fixed=True)
     edge_i = Edge(graph, node_a, node_b)
     resistor = Resistor(graph, 10, node_a, node_b, edge_i)
     graph.add_component(resistor)
     graph.solve()
+
+    graph.update()
     # Test that the current through the resistor is 0.5
     return test(0.5, edge_i.value(), epsilon=Config.epsilon)
+
+def test_capacitor():
+    """ Test graphs. """
+    # Simple resistor
+    graph = Graph()
+    node_a = Node(graph, value=5, fixed=True)
+    node_b = Node(graph, value=0, fixed=True)
+    edge_i = Edge(graph, node_a, node_b)
+    capacitor = Capacitor(graph, 10, node_a, node_b, edge_i)
+    graph.add_component(capacitor)
+    graph.solve()
+    # Test that no current flows
+    return test(0, edge_i.value(), epsilon=Config.epsilon)
 
 def test_buffer():
     # Buffer
@@ -63,6 +84,7 @@ def test_buffer():
     op_amp = Opamp(graph, node_a=node_out, node_b=node_in, node_out=node_out)
     graph.add_component(op_amp)
     graph.solve()
+    graph.update()
     return test(5, node_out.value(), epsilon=Config.epsilon)
 
 def test_inverting_opamp():
@@ -74,8 +96,8 @@ def test_inverting_opamp():
     return test(-input_signal[0], output_signal[0], epsilon=Config.epsilon)
 
 def test_all():
-    tests = [test_wire, test_chained_wires, test_resistor, test_buffer,
-             test_inverting_opamp]
+    tests = [test_wire, test_chained_wires, test_resistor,
+             test_capacitor, test_buffer, test_inverting_opamp]
     if False in [t() for t in tests]:
         print("At least one test failed.")
     else:

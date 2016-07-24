@@ -1,6 +1,8 @@
 
 """ A component that designates a capacitor. """
 
+import sympy as sy
+
 from graph import Node, Edge
 from component import Component
 from config import Config
@@ -34,6 +36,8 @@ class Inductor(Component):
         self._edge_i = edge_i
         self._inductance = inductance
 
+        self._i = sy.Symbol("i" + str(self))  # TODO better mangling
+
     def node_a(self):
         """ Returns node A.
 
@@ -66,6 +70,17 @@ class Inductor(Component):
         """
         return set([self._node_a, self._node_b, self._edge_i, "1"])
 
+    def substitutions(self):
+        """ Return a dictionary mapping each symbol to a value.  Return
+            an empty dictionary if no substitutions exist
+
+            Returns:
+                dictionary from sympy variable to value
+        """
+        mappings = {}
+        mappings[self._i] = self._edge_i.value()
+        return mappings
+
     def constraints(self):
         """ Returns a list of constraints that must be solved.
         A constraint is a tuple (coefficients, variables), where
@@ -80,10 +95,9 @@ class Inductor(Component):
             List of tuples (coefficients, variables)
         """
         # Inductor equation
-        prev_current = self._edge_i.value()
         coefficient = [float(-1) / self._inductance,
                        float(1) / self._inductance,
                        float(1) / Config.time_step,
-                       float(-prev_current) / Config.time_step]
+                       -self._i / Config.time_step]
         variable = [self._node_a, self._node_b, self._edge_i, "1"]
         return [(coefficient, variable)]

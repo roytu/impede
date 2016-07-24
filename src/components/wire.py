@@ -2,9 +2,8 @@
 """ A component that designates a wire. """
 
 from graph import Node, Edge
-from component import Component
 
-class Wire(Component):
+class Wire(object):
     """ Wire component """
     def __init__(self, graph, node_a=None, node_b=None, edge_i=None):
         """ Initializes a wire with two nodes.  Current goes from
@@ -54,6 +53,15 @@ class Wire(Component):
             Edge object
         """
         return self._edge_i
+
+    def substitutions(self):
+        """ Return a dictionary mapping each symbol to a value.  Return
+            an empty dictionary if no substitutions exist
+
+            Returns:
+                dictionary from sympy variable to value
+        """
+        return {}
 
     def variables(self):
         """ Returns a set of variables under constraints.

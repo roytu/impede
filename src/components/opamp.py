@@ -2,9 +2,8 @@
 """ A component that designates a opamp. """
 
 from graph import Node, Edge
-from component import Component
 
-class Opamp(Component):
+class Opamp(object):
     """ Opamp component """
     def __init__(self, graph, node_a=None, node_b=None, node_out=None):
         """ Initializes a opamp with two nodes.  A represents V- while B
@@ -92,6 +91,15 @@ class Opamp(Component):
             set of Nodes, Edges, tuples, or strings
         """
         return set([self._node_a, self._node_b, self._node_out])
+
+    def substitutions(self):
+        """ Return a dictionary mapping each symbol to a value.  Return
+            an empty dictionary if no substitutions exist
+
+            Returns:
+                dictionary from sympy variable to value
+        """
+        return {}
 
     def constraints(self):
         """ Returns a list of constraints that must be solved.

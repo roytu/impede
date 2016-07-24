@@ -98,10 +98,15 @@ class NoninvertingOpAmpFilter(object):
         Returns:
             Filter object
         """
+        probes = []
+
         graph = Graph()
 
         input_node = Node(graph, fixed=True, source=True, label="Vin")
         output_node = Node(graph, output=True, source=True, label="Vout")
+
+        probes.append(input_node)
+        probes.append(output_node)
 
         ground_node = Node(graph, value=0, fixed=True, source=True, label="GND")
         node_minus = Node(graph, label="V-")
@@ -115,7 +120,7 @@ class NoninvertingOpAmpFilter(object):
         # Make op amp
         graph.add_component(Opamp(graph, node_minus, input_node, output_node))
 
-        noninverting_filter = Filter(graph, input_node, output_node)
+        noninverting_filter = Filter(graph, input_node, output_node, probes=probes)
         return noninverting_filter
 
     @staticmethod

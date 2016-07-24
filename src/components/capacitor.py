@@ -1,11 +1,12 @@
 
 """ A component that designates a capacitor. """
 
+import sympy as sy
+
 from graph import Node, Edge
-from component import Component
 from config import Config
 
-class Capacitor(Component):
+class Capacitor(object):
     """ Capacitor component """
     def __init__(self, graph, capacitance, node_a=None, node_b=None, edge_i=None):
         """ Initializes a capacitor with two nodes.  Current goes from
@@ -34,6 +35,8 @@ class Capacitor(Component):
         self._edge_i = edge_i
         self._capacitance = capacitance
 
+        self._dv = sy.Symbol("dv" + str(self))  # TODO better mangling
+
     def node_a(self):
         """ Returns node A.
 
@@ -58,6 +61,17 @@ class Capacitor(Component):
         """
         return self._edge_i
 
+    def substitutions(self):
+        """ Return a dictionary mapping each symbol to a value.  Return
+            an empty dictionary if no substitutions exist
+
+            Returns:
+                dictionary from sympy variable to value
+        """
+        mappings = {}
+        mappings[self._dv] = self._node_a.value() - self._node_b.value()
+        return mappings
+
     def variables(self):
         """ Returns a set of variables under constraints.
 
@@ -80,10 +94,9 @@ class Capacitor(Component):
             List of tuples (coefficients, variables)
         """
         # Capacitor equation
-        prev_voltage = self._node_a.value() - self._node_b.value()
         coefficient = [float(1) / Config.time_step,
                        float(-1) / Config.time_step,
                        float(-1) / self._capacitance,
-                       float(-prev_voltage) / Config.time_step]
+                       -self._dv / Config.time_step]
         variable = [self._node_a, self._node_b, self._edge_i, "1"]
         return [(coefficient, variable)]

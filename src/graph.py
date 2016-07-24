@@ -7,6 +7,7 @@ IDs should be a type that supports equality.
 
 import numpy as np
 from numpy import linalg
+import sympy as sy
 import scipy.sparse
 from scipy.sparse.linalg import spsolve
 from scipy.linalg import qr
@@ -32,6 +33,7 @@ class Node(object):
         self._output = output
         self._source = source
         self._label = label
+        self._solution = None
 
     def is_fixed(self):
         """ Returns whether value is fixed or not.
@@ -156,6 +158,7 @@ class Graph(object):
         self._nodes = []
         self._edges = []
         self._components = []
+        self.__sub_func = {}
 
     def add_node(self, node):
         """ Adds a node to this graph and returns its ID.
@@ -223,6 +226,17 @@ class Graph(object):
         variables.append(const_variable)
         return variables
 
+    def sympy_variables(self):
+        """ Return a list of sympy variables associated with the variable
+            variables in the order of the variable variables
+
+        Returns:
+            list of sympy symbols
+        """
+        return [var.value() for var in self.variables()
+                if (isinstance(var, Node) or isinstance(var, Edge)) and
+                    not isinstance(var.value(), sy.Float)]
+
     def constraints(self):
         """ Return a list of constraints to be used in the matrix solver.
 
@@ -267,9 +281,50 @@ class Graph(object):
 
         return constraints
 
+    def internal_subs(self):
+        """ Return a dictionary of internal substitutions
+
+            Returns:
+                dictionary with mappings from sympy symbols to values
+        """
+        subs = {}
+        for component in self._components:
+            for k, v in component.substitutions():
+                subs[k] = v
+        return subs
+
+    def update(self, external_subs=None):
+        """ Assumes nodes store the current value for this iteration, and
+            updates all variables using this state.  Effectively runs one
+            timestep.
+
+            Args:
+                external_subs: Mapping from sympy symbols to floats
+                    (default=None)
+        """
+        variables = self.variables()
+
+        # Get all substitutions
+        subs = {}
+        if external_subs:
+            subs = external_subs.copy()  # TODO Optimization, don't copy
+        subs.update(self.internal_subs())
+
+        assignments = {}
+        for variable, expr in self._solution.items():
+            #value = expr.subs(subs)
+            value = expr(subs)
+            # Store this in an intermediate dictionary
+            assignments[variable] = value
+
+        # Perform all assignments
+        for variable, value in assignments.items():
+            variable.set_value(value)
+
     def solve(self):
-        """ Assigns values to nodes and edges until all constraints are met.
-        TODO THIS CODE SUCKS
+        """ Solves the matrix symbolically and stores a mapping between each
+            hanging symbol and the expression to evaluate that updates
+            that symbol.
         """
         const_variable = "1"
 
@@ -284,19 +339,32 @@ class Graph(object):
             var_to_row[variable] = i
 
         dim = len(variables)
-        constraint_matrix = np.zeros((dim, dim))
+        constraint_matrix = sy.zeros(dim, dim)
 
         for i, (cs, vs) in enumerate(constraints):
-            row = np.zeros(dim)
+            row = sy.zeros(1, dim)
             for c, v in zip(cs, vs):
                 row[var_to_row[v]] = c
-            constraint_matrix[i] = row
+            constraint_matrix[i, :] = row
 
         # Solve the linear equation
-        b = np.append(np.zeros(dim - 1), [1])
-        solution = linalg.solve(constraint_matrix, b)
-
-        # Apply the solution to the graph
-        for variable, value in zip(variables, solution):
+        b = sy.zeros(dim, 1)
+        b[-1] = 1
+        xs = constraint_matrix.LUsolve(b)
+        self._solution = {}
+        for variable, expr in zip(variables, xs):
             if isinstance(variable, Node) or isinstance(variable, Edge):
-                variable.set_value(value)
+                # Function should take a dictionary of substitutions
+                # and return a float
+                def g(expr2):
+                    def f(subs):
+                        """ Function takes a dictionary of substitutions and
+                            returns a float that represents the evaluation
+                            of this expression.
+                        """
+                        if variable not in self.__sub_func:
+                            sub_vars = subs.keys()
+                            self.__sub_func[variable] = sy.lambdify(tuple(sub_vars), expr2)
+                        return self.__sub_func[variable](*subs.values())
+                    return f
+                self._solution[variable] = g(expr)

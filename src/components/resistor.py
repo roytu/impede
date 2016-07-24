@@ -2,9 +2,8 @@
 """ A component that designates a resistor. """
 
 from graph import Node, Edge
-from component import Component
 
-class Resistor(Component):
+class Resistor(object):
     """ Resistor component """
     def __init__(self, graph, resistance, node_a=None, node_b=None, edge_i=None):
         """ Initializes a resistor with two nodes.  Current goes from
@@ -56,6 +55,15 @@ class Resistor(Component):
             Edge object
         """
         return self._edge_i
+
+    def substitutions(self):
+        """ Return a dictionary mapping each symbol to a value.  Return
+            an empty dictionary if no substitutions exist
+
+            Returns:
+                dictionary from sympy variable to value
+        """
+        return {}
 
     def variables(self):
         """ Returns a set of variables under constraints.
