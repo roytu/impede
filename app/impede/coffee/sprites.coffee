@@ -7,6 +7,12 @@ class @CapacitorSprite extends Sprite
     @constructSVG: (x, y, v) ->
         DA = window.DescArea()
 
+        if v == ""
+            v = 0
+        else
+            v = parseFloat(v)
+        [v, us] = Units.pretty_resize(v)
+
         toDStr = (lst) ->
             return d3.svg.line()
                     .x((d) -> return d.x)
@@ -74,7 +80,7 @@ class @CapacitorSprite extends Sprite
         svg.updateText = (v) ->
             if v == ""
                 v = "0"
-            svg.valueText.text(v + " F")
+            svg.valueText.text("#{v.toFixed(1)} #{us}F")
         svg.updateText(v)
         return svg
 
@@ -138,6 +144,12 @@ class @VSrcSprite extends Sprite
     @constructSVG: (x, y, v) ->
         DA = window.DescArea()
 
+        if v == ""
+            v = 0
+        else
+            v = parseFloat(v)
+        [v, us] = Units.pretty_resize(v)
+
         toDStr = (lst) ->
             d3.svg.line()
                   .x((d) -> return d.x)
@@ -162,7 +174,7 @@ class @VSrcSprite extends Sprite
         svg.updateText = (v) ->
             if v == ""
                 v = "0"
-            svg.valueText.text(v + " V")
+            svg.valueText.text("#{v.toFixed(1)} #{us}V")
         svg.updateText(v)
         return svg
 
@@ -226,6 +238,12 @@ class @InductorSprite extends Sprite
     @constructSVG: (x, y, v) ->
         DA = window.DescArea()
 
+        if v == ""
+            v = 0
+        else
+            v = parseFloat(v)
+        [v, us] = Units.pretty_resize(v)
+
         toDStr = (lst) ->
             return d3.svg.line()
                     .x((d) -> return d.x)
@@ -287,13 +305,19 @@ class @InductorSprite extends Sprite
         svg.updateText = (v) ->
             if v == ""
                 v = "0"
-            svg.valueText.text(v + " H")
+            svg.valueText.text("#{v.toFixed(1)} #{us}H")
         svg.updateText(v)
         return svg
 
 class @ResistorSprite extends Sprite
     @constructSVG: (x, y, v) ->
         DA = window.DescArea()
+
+        if v == ""
+            v = 0
+        else
+            v = parseFloat(v)
+        [v, us] = Units.pretty_resize(v)
 
         toDStr = (lst) ->
             return d3.svg.line()
@@ -343,7 +367,7 @@ class @ResistorSprite extends Sprite
         svg.updateText = (v) ->
             if v == ""
                 v = "0"
-            svg.valueText.text("#{v} Ω")
+            svg.valueText.text("#{v.toFixed(1)} #{us}Ω")
         svg.updateText(v)
         return svg
 

@@ -32,10 +32,18 @@ root.init = ->
         
         # Start program
         Grid.initialize()
-        
+
+        # Unit handling
+        use_unit = (u) ->
+            v = parseFloat(Metastate.value_text)
+            v /= Math.pow(10, Math.floor(Math.log10(v) / 3) * 3)
+            v *= u
+            Metastate.value_text = "#{v}"
+            Metastate.updateGhost()
+
         # Keypresses
         $("body").keydown( (e) ->
-            #console.log(e.keyCode)
+            console.log(e.keyCode)
             switch e.keyCode
                 when 38  # UP
                   Grid.zoomIn()
@@ -45,43 +53,68 @@ root.init = ->
                   Grid.zoomOut()
                   Grid.redraw()
                   Metastate.updateSVGs()
-                when 68  # D
+                when 68  # d
                   Metastate.selected = Elements.DELETOR
                   Metastate.updateGhost()
-                when 82  # R
+                when 82  # r
                   Metastate.selected = Elements.RESISTOR
+                  Metastate.value_text = ""
                   Metastate.updateGhost()
-                when 67  # C
+                when 67  # c
                   Metastate.selected = Elements.CAPACITOR
+                  Metastate.value_text = ""
                   Metastate.updateGhost()
-                when 76  # L
+                when 76  # l
                   Metastate.selected = Elements.INDUCTOR
+                  Metastate.value_text = ""
                   Metastate.updateGhost()
-                when 71  # G
+                when 71  # g
                   Metastate.selected = Elements.GND
                   Metastate.updateGhost()
-                when 86  # V
+                when 86  # v
                   Metastate.selected = Elements.V_SRC
+                  Metastate.value_text = ""
                   Metastate.updateGhost()
-                when 73  # I
-                  Metastate.selected = Elements.V_IN
-                  Metastate.updateGhost()
-                when 79  # O
+                when 73  # i / I
+                  if e.shiftKey
+                      Metastate.selected = Elements.V_IN
+                      Metastate.updateGhost()
+                  else
+                    use_unit(Units::i)
+                when 79  # o
                   Metastate.selected = Elements.V_OUT
                   Metastate.updateGhost()
-                when 65  # A
+                when 65  # a
                   Metastate.selected = Elements.OPAMP
                   Metastate.updateGhost()
+                # UNITS
+                when 80  # p
+                  use_unit(Units::p)
+                when 78  # n
+                  use_unit(Units::n)
+                when 85  # u
+                  use_unit(Units::u)
+                when 77  # m
+                  if e.shiftKey
+                      use_unit(Units::M)
+                  else
+                      use_unit(Units::m)
+                when 75  # k
+                  use_unit(Units::K)
+                when 71  # g
+                  use_unit(Units::G)
                 when 48, 49, 50, 51, 52, 53, 54, 55, 56, 57  # Numbers 0 - 9
-                  DA = window.DescArea()
                   Metastate.value_text += "#{e.keyCode - 48}"
+                  Metastate.updateGhost()
+                when 190  # .
+                  Metastate.value_text += "."
                   Metastate.updateGhost()
                 when 8  # Backspace
                   e.preventDefault()
                   DA = window.DescArea()
                   Metastate.value_text = Metastate.value_text.slice(0, -1)
                   Metastate.updateGhost()
-                when 87  # W
+                when 87  # w
                   Metastate.first_mx = null
                   Metastate.first_my = null
                   Metastate.selected = Elements.WIRE
