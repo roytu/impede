@@ -109,7 +109,7 @@ class @Metastate
                 den = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2))
                 dist = num / den
                 
-                if dist < 1
+                if dist < 0.5
                     arr.splice(i, 1)
                     @updateSVGs()
                     return
