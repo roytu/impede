@@ -33,10 +33,20 @@
           case Elements.CAPACITOR:
           case Elements.INDUCTOR:
           case Elements.OPAMP:
+          case Elements.GND:
           case Elements.V_IN:
           case Elements.V_OUT:
           case Elements.V_SRC:
             return Metastate.addElement(d3.mouse(this)[0], d3.mouse(this)[1], Metastate.getValue());
+          case Elements.WIRE:
+            if (Metastate.first_mx === null) {
+              Metastate.first_mx = d3.mouse(this)[0];
+              return Metastate.first_my = d3.mouse(this)[1];
+            } else {
+              Metastate.addElement(d3.mouse(this)[0], d3.mouse(this)[1], Metastate.getValue());
+              Metastate.first_mx = null;
+              return Metastate.first_my = null;
+            }
         }
       });
     }

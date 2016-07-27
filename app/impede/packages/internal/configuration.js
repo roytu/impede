@@ -7,10 +7,14 @@
       this.capacitors = [];
       this.inductors = [];
       this.opamps = [];
+      this.grounds = [];
+      this.v_srcs = [];
+      this.v_ins = [];
+      this.v_outs = [];
     }
 
     Configuration.prototype.addWire = function(x1, y1, x2, y2) {
-      if (!contains(this.wires, [x1, y1, x2, y2])) {
+      if (!contains(this.wires, [x1, y1, x2, y2]) && (x1 !== x2 && y1 !== y2)) {
         return this.wires.push([x1, y1, x2, y2]);
       }
     };

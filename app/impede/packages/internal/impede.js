@@ -5,7 +5,7 @@
   root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
   root.init = function() {
-    var CapacitorSprite, Configuration, DA, Drawable, Elements, Grid, InductorSprite, Metastate, ResistorSprite, SA, Sprite, State, WireGhostSprite, WireSprite;
+    var CapacitorSprite, Configuration, DA, Drawable, Elements, Grid, GroundSprite, InductorSprite, Metastate, ResistorSprite, SA, Sprite, State, VSrcSprite, WireGhostSprite, WireSprite;
     if (Meteor.isClient) {
       ({
         contains: function(array, element) {
@@ -34,9 +34,12 @@
       ResistorSprite = window.ResistorSprite;
       InductorSprite = window.InductorSprite;
       CapacitorSprite = window.CapacitorSprite;
+      GroundSprite = window.GroundSprite;
+      VSrcSprite = window.VSrcSprite;
       State = window.State;
       Grid.initialize();
       return $("body").keydown(function(e) {
+        console.log(e.keyCode);
         switch (e.keyCode) {
           case 38:
             Grid.zoomIn();
@@ -54,6 +57,21 @@
             return Metastate.updateGhost();
           case 76:
             Metastate.selected = Elements.INDUCTOR;
+            return Metastate.updateGhost();
+          case 71:
+            Metastate.selected = Elements.GND;
+            return Metastate.updateGhost();
+          case 86:
+            Metastate.selected = Elements.V_SRC;
+            return Metastate.updateGhost();
+          case 73:
+            Metastate.selected = Elements.V_IN;
+            return Metastate.updateGhost();
+          case 79:
+            Metastate.selected = Elements.V_OUT;
+            return Metastate.updateGhost();
+          case 65:
+            Metastate.selected = Elements.OPAMP;
             return Metastate.updateGhost();
           case 48:
           case 49:
@@ -73,6 +91,15 @@
             DA = window.DescArea();
             Metastate.value_text = Metastate.value_text.slice(0, -1);
             return Metastate.updateGhost();
+          case 87:
+            Metastate.first_mx = null;
+            Metastate.first_my = null;
+            Metastate.selected = Elements.WIRE;
+            return Metastate.updateGhost();
+          case 27:
+            Metastate.first_mx = null;
+            Metastate.first_my = null;
+            return Metastate.selected = null;
         }
       });
     }

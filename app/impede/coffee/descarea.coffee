@@ -42,10 +42,23 @@ class @DescArea
                      , Elements.CAPACITOR
                      , Elements.INDUCTOR
                      , Elements.OPAMP
+                     , Elements.GND
                      , Elements.V_IN
                      , Elements.V_OUT
                      , Elements.V_SRC
                            Metastate.addElement(d3.mouse(this)[0],
                                                 d3.mouse(this)[1],
                                                 Metastate.getValue())
+                when Elements.WIRE
+                    if Metastate.first_mx == null
+                        # Pick first point
+                        Metastate.first_mx = d3.mouse(this)[0]
+                        Metastate.first_my = d3.mouse(this)[1]
+                    else
+                        # Draw wire
+                        Metastate.addElement(d3.mouse(this)[0],
+                                             d3.mouse(this)[1],
+                                             Metastate.getValue())
+                        Metastate.first_mx = null
+                        Metastate.first_my = null
         )

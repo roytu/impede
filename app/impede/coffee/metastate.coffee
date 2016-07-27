@@ -9,11 +9,13 @@ class @Metastate
             instance = this
         @selected = null
         @value_text = ""
-        @value_unit = Units.i
+        @value_unit = Units::i
         @_mx = 0
         @_my = 0
         @_ghost = null
         @_svgs = []
+        @first_mx = null
+        @first_my = null
 
     initialize: ->
         DA = window.DescArea()
@@ -36,16 +38,55 @@ class @Metastate
                 when Elements.INDUCTOR
                     InductorSprite = window.InductorSprite
                     @_ghost = InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(@value_text))
+                when Elements.GND
+                    GroundSprite = window.GroundSprite
+                    @_ghost = GroundSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
+                when Elements.V_SRC
+                    VSrcSprite = window.VSrcSprite
+                    @_ghost = VSrcSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(@value_text))
+                when Elements.V_IN
+                    VInSprite = window.VInSprite
+                    @_ghost = VInSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
+                when Elements.V_OUT
+                    VOutSprite = window.VOutSprite
+                    @_ghost = VOutSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
+                when Elements.OPAMP
+                    OpampSprite = window.OpampSprite
+                    @_ghost = OpampSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
+                when Elements.WIRE
+                    WireSprite = window.WireSprite
+                    if @first_mx != null
+                        pos = Grid.snapToGrid(@first_mx, @first_my)
+                        pos = pos.concat(Grid.snapToGrid(mx, my))
+                        @_ghost = WireSprite.constructSVG.apply(this, pos)
 
     addElement: (mx, my, v=0) ->
         switch @selected
             when Elements.RESISTOR
                 @config.resistors.push([mx, my, v])
-
+            when Elements.CAPACITOR
+                @config.capacitors.push([mx, my, v])
+            when Elements.INDUCTOR
+                @config.inductors.push([mx, my, v])
+            when Elements.GND
+                @config.grounds.push([mx, my])
+            when Elements.V_SRC
+                @config.v_srcs.push([mx, my, v])
+            when Elements.V_IN
+                @config.v_ins.push([mx, my])
+            when Elements.V_OUT
+                @config.v_outs.push([mx, my])
+            when Elements.OPAMP
+                @config.opamps.push([mx, my])
+            when Elements.WIRE
+                pos = Grid.snapToGrid(@first_mx, @first_my)
+                pos = pos.concat(Grid.snapToGrid(mx, my))
+                @config.wires.push(pos)
         @updateSVGs()
 
     removeElement: (mx, my) ->
         # Explicitly remove HTML by rounding
+        # TODO fix this
         Grid = window.Grid
         State = window.State
 
@@ -84,6 +125,23 @@ class @Metastate
         # Redraw everything
         for [x, y, v] in @config.resistors
             @_svgs.push(ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+        for [x, y, v] in @config.capacitors
+            @_svgs.push(CapacitorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+        for [x, y, v] in @config.inductors
+            @_svgs.push(InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+        for [x, y] in @config.grounds
+            @_svgs.push(GroundSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+        for [x, y] in @config.v_ins
+            @_svgs.push(VInSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+        for [x, y] in @config.v_outs
+            @_svgs.push(VOutSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+        for [x, y] in @config.opamps
+            @_svgs.push(OpampSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+        for [x, y, v] in @config.v_srcs
+            @_svgs.push(VSrcSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+        for [x1, y1, x2, y2] in @config.wires
+            pos = Grid.snapToGrid(x1, y1).concat(Grid.snapToGrid(x2, y2))
+            @_svgs.push(WireSprite.constructSVG.apply(this, pos))
 
     load: (jsonStr) ->
         State = window.State
@@ -95,4 +153,4 @@ class @Metastate
             @updateSVGs()
 
     getValue: ->
-        Units.toValue(parseFloat(@value_text), @value)
+        Units.toValue(parseFloat(@value_text), @value_unit)

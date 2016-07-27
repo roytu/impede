@@ -4,6 +4,7 @@
     CAPACITOR: 2
     INDUCTOR: 3
     OPAMP: 4
-    V_IN: 5
-    V_OUT: 6
-    V_SRC: 7
+    GND: 5
+    V_IN: 6
+    V_OUT: 7
+    V_SRC: 8

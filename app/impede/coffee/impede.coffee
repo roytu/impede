@@ -25,12 +25,17 @@ root.init = ->
         ResistorSprite = window.ResistorSprite
         InductorSprite = window.InductorSprite
         CapacitorSprite = window.CapacitorSprite
+        GroundSprite = window.GroundSprite
+        VSrcSprite = window.VSrcSprite
 
         State = window.State
         
+        # Start program
         Grid.initialize()
         
+        # Keypresses
         $("body").keydown( (e) ->
+            console.log(e.keyCode)
             switch e.keyCode
                 when 38  # UP
                   Grid.zoomIn()
@@ -49,6 +54,21 @@ root.init = ->
                 when 76  # L
                   Metastate.selected = Elements.INDUCTOR
                   Metastate.updateGhost()
+                when 71  # G
+                  Metastate.selected = Elements.GND
+                  Metastate.updateGhost()
+                when 86  # V
+                  Metastate.selected = Elements.V_SRC
+                  Metastate.updateGhost()
+                when 73  # I
+                  Metastate.selected = Elements.V_IN
+                  Metastate.updateGhost()
+                when 79  # O
+                  Metastate.selected = Elements.V_OUT
+                  Metastate.updateGhost()
+                when 65  # A
+                  Metastate.selected = Elements.OPAMP
+                  Metastate.updateGhost()
                 when 48, 49, 50, 51, 52, 53, 54, 55, 56, 57  # Numbers 0 - 9
                   DA = window.DescArea()
                   Metastate.value_text += "#{e.keyCode - 48}"
@@ -58,4 +78,13 @@ root.init = ->
                   DA = window.DescArea()
                   Metastate.value_text = Metastate.value_text.slice(0, -1)
                   Metastate.updateGhost()
+                when 87  # W
+                  Metastate.first_mx = null
+                  Metastate.first_my = null
+                  Metastate.selected = Elements.WIRE
+                  Metastate.updateGhost()
+                when 27  # Esc
+                  Metastate.first_mx = null
+                  Metastate.first_my = null
+                  Metastate.selected = null
         )
