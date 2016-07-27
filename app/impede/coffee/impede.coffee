@@ -35,7 +35,7 @@ root.init = ->
         
         # Keypresses
         $("body").keydown( (e) ->
-            console.log(e.keyCode)
+            #console.log(e.keyCode)
             switch e.keyCode
                 when 38  # UP
                   Grid.zoomIn()
@@ -45,6 +45,9 @@ root.init = ->
                   Grid.zoomOut()
                   Grid.redraw()
                   Metastate.updateSVGs()
+                when 68  # D
+                  Metastate.selected = Elements.DELETOR
+                  Metastate.updateGhost()
                 when 82  # R
                   Metastate.selected = Elements.RESISTOR
                   Metastate.updateGhost()

@@ -61,4 +61,7 @@ class @DescArea
                                              Metastate.getValue())
                         Metastate.first_mx = null
                         Metastate.first_my = null
+                when   Elements.DELETOR
+                    Metastate.removeElement(d3.mouse(this)[0],
+                                            d3.mouse(this)[1])
         )

@@ -72,6 +72,8 @@ class @CapacitorSprite extends Sprite
             .attr("shape-rendering", "crispEdges")
             .style("font-size", "16px")
         svg.updateText = (v) ->
+            if v == ""
+                v = "0"
             svg.valueText.text(v + " F")
         svg.updateText(v)
         return svg
@@ -158,6 +160,8 @@ class @VSrcSprite extends Sprite
             .attr("shape-rendering", "crispEdges")
             .style("font-size", "16px")
         svg.updateText = (v) ->
+            if v == ""
+                v = "0"
             svg.valueText.text(v + " V")
         svg.updateText(v)
         return svg
@@ -281,6 +285,8 @@ class @InductorSprite extends Sprite
             .attr("shape-rendering", "crispEdges")
             .style("font-size", "16px")
         svg.updateText = (v) ->
+            if v == ""
+                v = "0"
             svg.valueText.text(v + " H")
         svg.updateText(v)
         return svg
@@ -335,6 +341,8 @@ class @ResistorSprite extends Sprite
             .attr("shape-rendering", "crispEdges")
             .style("font-size", "16px")
         svg.updateText = (v) ->
+            if v == ""
+                v = "0"
             svg.valueText.text("#{v} Ω")
         svg.updateText(v)
         return svg

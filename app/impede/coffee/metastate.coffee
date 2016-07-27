@@ -43,13 +43,13 @@ class @Metastate
                     @_ghost = GroundSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
                 when Elements.V_SRC
                     VSrcSprite = window.VSrcSprite
-                    @_ghost = VSrcSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my).concat(@value_text))
+                    @_ghost = VSrcSprite.constructSVG.apply(this, Grid.snapToGrid(mx, my).concat(@value_text))
                 when Elements.V_IN
                     VInSprite = window.VInSprite
-                    @_ghost = VInSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
+                    @_ghost = VInSprite.constructSVG.apply(this, Grid.snapToGrid(mx, my))
                 when Elements.V_OUT
                     VOutSprite = window.VOutSprite
-                    @_ghost = VOutSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
+                    @_ghost = VOutSprite.constructSVG.apply(this, Grid.snapToGrid(mx, my))
                 when Elements.OPAMP
                     OpampSprite = window.OpampSprite
                     @_ghost = OpampSprite.constructSVG.apply(this, Grid.snapToGridFloor(mx, my))
@@ -61,61 +61,79 @@ class @Metastate
                         @_ghost = WireSprite.constructSVG.apply(this, pos)
 
     addElement: (mx, my, v=0) ->
+        [x, y] = Grid.getGridPosFloor(mx, my)
+        [rx, ry] = Grid.getGridPos(mx, my)
         switch @selected
             when Elements.RESISTOR
-                @config.resistors.push([mx, my, v])
+                @config.resistors.push([x, y, v])
             when Elements.CAPACITOR
-                @config.capacitors.push([mx, my, v])
+                @config.capacitors.push([x, y, v])
             when Elements.INDUCTOR
-                @config.inductors.push([mx, my, v])
+                @config.inductors.push([x, y, v])
             when Elements.GND
-                @config.grounds.push([mx, my])
+                @config.grounds.push([x, y])
             when Elements.V_SRC
-                @config.v_srcs.push([mx, my, v])
+                @config.v_srcs.push([rx, ry, v])
             when Elements.V_IN
-                @config.v_ins.push([mx, my])
+                @config.v_ins.push([rx, ry])
             when Elements.V_OUT
-                @config.v_outs.push([mx, my])
+                @config.v_outs.push([rx, ry])
             when Elements.OPAMP
-                @config.opamps.push([mx, my])
+                @config.opamps.push([x, y])
             when Elements.WIRE
-                pos = Grid.snapToGrid(@first_mx, @first_my)
-                pos = pos.concat(Grid.snapToGrid(mx, my))
+                pos = Grid.getGridPos(@first_mx, @first_my)
+                pos = pos.concat(Grid.getGridPos(mx, my))
                 @config.wires.push(pos)
         @updateSVGs()
 
     removeElement: (mx, my) ->
         # Explicitly remove HTML by rounding
-        # TODO fix this
         Grid = window.Grid
         State = window.State
 
         mpos = Grid.getGridPosNoround(mx, my)
-
-        arr = State.config.htmls
-        for i in [0..arr.length]
-            x = arr[i]
-            if (Math.sqrt(Math.pow(x[0] - mpos[0], 2) + Math.pow(x[1] - mpos[1], 2)) < 1)
-                arr.splice(i, 1)
-                @updateSVGs()
-                return
-
         pos = Grid.getGridPos(mx, my)
 
-        elementArrays = [State.config.args,
-                         State.config.results,
-                         State.config.sources,
-                         State.config.sinks,
-                         State.config.hwalls,
-                         State.config.vwalls]
-        for j in [0..elementArrays.length]
-            arr = elementArrays[j]
-            for i in [0..arr.length]
+        # Delete wires
+        arr = @config.wires
+        if arr.length > 0
+            for i in [0..arr.length-1]
                 x = arr[i]
-                if x[0] == pos[0] && x[1] == pos[1]
+
+                # Check if mouse position is close enough to pos
+                # https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
+                [x0, y0] = [mpos[0], mpos[1]]
+                [x1, y1] = [x[0], x[1]]
+                [x2, y2] = [x[2], x[3]]
+                num = Math.abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1)
+                den = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2))
+                dist = num / den
+                console.log(num)
+                console.log(den)
+                console.log(dist)
+                
+                if dist < 1
                     arr.splice(i, 1)
                     @updateSVGs()
                     return
+
+        # Delete normal elements
+        elementArrays = [@config.resistors,
+                         @config.capacitors,
+                         @config.inductors,
+                         @config.opamps,
+                         @config.grounds,
+                         @config.v_srcs,
+                         @config.v_ins,
+                         @config.v_outs]
+        for arr in elementArrays
+            if arr.length > 0
+                for i in [0..arr.length - 1]
+                    x = arr[i]
+                    if x[0] == pos[0] && x[1] == pos[1]
+                        arr.splice(i, 1)
+                        @updateSVGs()
+                        return
 
     updateSVGs: ->
         @_svgs.forEach( (svg) ->
@@ -124,23 +142,23 @@ class @Metastate
         @_svgs = []
         # Redraw everything
         for [x, y, v] in @config.resistors
-            @_svgs.push(ResistorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+            @_svgs.push(ResistorSprite.constructSVG.apply(this, Grid.getDrawPos(x, y).concat(v)))
         for [x, y, v] in @config.capacitors
-            @_svgs.push(CapacitorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+            @_svgs.push(CapacitorSprite.constructSVG.apply(this, Grid.getDrawPos(x, y).concat(v)))
         for [x, y, v] in @config.inductors
-            @_svgs.push(InductorSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+            @_svgs.push(InductorSprite.constructSVG.apply(this, Grid.getDrawPos(x, y).concat(v)))
         for [x, y] in @config.grounds
-            @_svgs.push(GroundSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+            @_svgs.push(GroundSprite.constructSVG.apply(this, Grid.getDrawPos(x, y)))
         for [x, y] in @config.v_ins
-            @_svgs.push(VInSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+            @_svgs.push(VInSprite.constructSVG.apply(this, Grid.getDrawPos(x, y)))
         for [x, y] in @config.v_outs
-            @_svgs.push(VOutSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+            @_svgs.push(VOutSprite.constructSVG.apply(this, Grid.getDrawPos(x, y)))
         for [x, y] in @config.opamps
-            @_svgs.push(OpampSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y)))
+            @_svgs.push(OpampSprite.constructSVG.apply(this, Grid.getDrawPos(x, y)))
         for [x, y, v] in @config.v_srcs
-            @_svgs.push(VSrcSprite.constructSVG.apply(this, Grid.snapToGridFloor(x, y).concat(v)))
+            @_svgs.push(VSrcSprite.constructSVG.apply(this, Grid.getDrawPos(x, y).concat(v)))
         for [x1, y1, x2, y2] in @config.wires
-            pos = Grid.snapToGrid(x1, y1).concat(Grid.snapToGrid(x2, y2))
+            pos = Grid.getDrawPos(x1, y1).concat(Grid.getDrawPos(x2, y2))
             @_svgs.push(WireSprite.constructSVG.apply(this, pos))
 
     load: (jsonStr) ->
@@ -153,4 +171,7 @@ class @Metastate
             @updateSVGs()
 
     getValue: ->
-        Units.toValue(parseFloat(@value_text), @value_unit)
+        if @value_text == ""
+            return 0
+        else
+            return Units.toValue(parseFloat(@value_text), @value_unit)

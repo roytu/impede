@@ -8,3 +8,4 @@
     V_IN: 6
     V_OUT: 7
     V_SRC: 8
+    DELETOR: 9
