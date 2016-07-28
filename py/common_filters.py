@@ -33,9 +33,14 @@ class LowPassFilter(object):
         ground_node = Node(graph, value=0, fixed=True, source=True)
 
         # Add resistor from input to output
-        graph.add_component(Resistor(graph, r, input_node, output_node))
+        edge = Edge(graph, input_node, output_node)
+        resistor = Resistor(graph, r, input_node, output_node, edge)
+        graph.add_component(resistor)
+
         # Add capacitor from output to ground
-        graph.add_component(Capacitor(graph, c, output_node, ground_node))
+        edge = Edge(graph, output_node, ground_node)
+        capacitor = Capacitor(graph, c, output_node, ground_node, edge)
+        graph.add_component(capacitor)
 
         lowpass = Filter(graph, input_node, output_node)
         return lowpass

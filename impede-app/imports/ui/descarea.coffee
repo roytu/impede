@@ -86,6 +86,7 @@ class @DescArea
             .attr("height", bh)
             .style("fill", "white")
             .style("stroke", "black")
+            .style("opacity", 0)
 
         @msgText = @svg.append("text")
             .attr("x", @w - bw - bpad + tmarg)

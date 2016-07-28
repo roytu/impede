@@ -264,13 +264,13 @@ class Graph(object):
         for var in variables:
             if isinstance(var, Node):
                 # Get all edges and their directions wrt. this node
-                edges, polarities = self.connected_edges(var)
                 if not var.is_source():
+                    edges, polarities = self.connected_edges(var)
                     if len(edges) <= 1:
                         if var.is_output():
                             # Outputs assume an infinite impedence
                             cs = [1]
-                            xs = [edges]
+                            xs = edges
                             constraints.append(Constraint(cs, xs))
                     else:
                         cs = polarities

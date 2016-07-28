@@ -87,6 +87,5 @@ class Wire(object):
         """
         cs = [1, -1]
         xs = [self._node_a, self._node_b]
-        b = 0
-        constraint = Constraint(cs, xs, b)
+        constraint = Constraint(cs, xs)
         return [constraint]
