@@ -21,7 +21,17 @@ class @Configuration
             @wires.push([x1, y1, x2, y2])
 
     toString: ->
-        JSON.stringify([])
+        JSON.stringify({
+            wires: @wires,
+            resistors: @resistors,
+            capacitors: @capacitors,
+            inductors: @inductors,
+            opamps: @opamps,
+            grounds: @grounds,
+            v_srcs: @v_srcs,
+            v_ins: @v_ins,
+            v_outs: @v_outs
+        })
 
     fromString: (str) ->
         pr = JSON.parse(str)

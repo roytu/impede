@@ -158,6 +158,21 @@ class @Metastate
             pos = Grid.getDrawPos(x1, y1).concat(Grid.getDrawPos(x2, y2))
             @_svgs.push(WireSprite.constructSVG.apply(this, pos))
 
+    save: ->
+        # Take input signal
+        session = new Meteor.Collection("sessions")
+        id = session.find().count()
+        session.insert({
+            id: id,
+            config: @config
+            # TODO save Vin
+        })
+
+    loadInput: ->
+        # Allows the user to load a WAV file
+        # TODO
+        return
+
     load: (jsonStr) ->
         State = window.State
 

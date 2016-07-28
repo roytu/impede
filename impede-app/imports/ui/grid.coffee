@@ -1,4 +1,4 @@
-class Grid extends Drawable
+class Grid
     # A Grid (singleton) is a type of Drawable that draws a grid
     instance = null
     constructor: ->
