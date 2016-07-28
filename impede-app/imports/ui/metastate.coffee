@@ -2,7 +2,7 @@ class @Metastate
     # A Metastate (singleton) handles all the information about the current user's
     # settings; i.e. currently selected element
     instance = null
-    constructor: (@config) ->
+    constructor: (@id) ->
         if instance
             return instance
         else
@@ -17,6 +17,16 @@ class @Metastate
         @first_mx = null
         @first_my = null
 
+        @sessions = new Meteor.Collection("sessions")
+        Meteor.subscribe("sessions", {
+            onReady: =>
+                @config = new Configuration()
+                if @id != null
+                    match = @sessions.findOne(@id)
+                    @config.fromString(JSON.stringify(match["config"]))
+                    @updateSVGs()
+        })
+        
     initialize: ->
         DA = window.DescArea()
         @_ghost = DA.svg.append("svg")
@@ -88,9 +98,6 @@ class @Metastate
 
     removeElement: (mx, my) ->
         # Explicitly remove HTML by rounding
-        Grid = window.Grid
-        State = window.State
-
         mpos = Grid.getGridPosNoround(mx, my)
         pos = Grid.getGridPos(mx, my)
 
@@ -159,14 +166,16 @@ class @Metastate
             @_svgs.push(WireSprite.constructSVG.apply(this, pos))
 
     save: ->
-        # Take input signal
-        session = new Meteor.Collection("sessions")
-        id = session.find().count()
-        session.insert({
-            id: id,
-            config: @config
-            # TODO save Vin
-        })
+        if @id == null
+            @sessions.insert({ "config" : @config }, (err, id) =>
+                @id = id
+                FlowRouter.go("/:id", { "id": @id })
+            )
+        else
+            if @sessions.find(@id).count == 0
+                @sessions.insert(@id, { "config" : @config })
+            else
+                @sessions.update(@id, { "config" : @config })
 
     loadInput: ->
         # Allows the user to load a WAV file
@@ -174,12 +183,8 @@ class @Metastate
         return
 
     load: (jsonStr) ->
-        State = window.State
-
         jsonStr ?= prompt("Paste your JSON!")
         if jsonStr?
-            State.stop()
-            State.config.fromString(jsonStr)
             @updateSVGs()
 
     getValue: ->

@@ -35,4 +35,12 @@ class @Configuration
 
     fromString: (str) ->
         pr = JSON.parse(str)
-        return
+        @wires = pr["wires"]
+        @resistors = pr["resistors"]
+        @capacitors = pr["capacitors"]
+        @inductors = pr["inductors"]
+        @opamps = pr["opamps"]
+        @grounds = pr["grounds"]
+        @v_srcs = pr["v_srcs"]
+        @v_ins = pr["v_ins"]
+        @v_outs = pr["v_outs"]
