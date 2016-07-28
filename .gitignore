@@ -1,8 +1,8 @@
 # Custom
-app/impede/packages/
 output/
 app/notes
 *.swp
+app/impede/.meteor/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
