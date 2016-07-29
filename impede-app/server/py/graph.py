@@ -162,6 +162,7 @@ class Graph(object):
         self._edges = []
         self._components = []
         self.__sub_func = {}
+        self.__variables = None
 
     def add_node(self, node):
         """ Adds a node to this graph and returns its ID.
@@ -218,12 +219,17 @@ class Graph(object):
         Returns:
             list of Nodes, Edges, or tuples
         """
+        # TODO WARNING VARIABLES IS CACHED!!
+        if self.__variables:
+            return self.__variables
+
         # Gather variables and constraints
         variables = set([])
         for component in self._components:
             variables = variables.union(set(component.variables()))
 
-        return list(variables)
+        self.__variables = list(variables)
+        return self.__variables
 
     def sympy_variables(self):
         """ Return a list of sympy variables associated with the variable
@@ -277,8 +283,7 @@ class Graph(object):
         """
         subs = {}
         for component in self._components:
-            for k, v in component.substitutions().items():
-                subs[k] = v
+            subs.update(component.substitutions())
         return subs
 
     def update(self, external_subs=None):

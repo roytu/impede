@@ -6,6 +6,7 @@
 
 # TODO multiprocessing
 
+import cProfile
 import traceback
 from pymongo import MongoClient
 from js_play import play
@@ -25,6 +26,7 @@ if __name__ == "__main__":
             print("Processing {0}...".format(id_))
 
             try:
+                #cProfile.run("play(id_)")
                 play(id_)
             except Exception as e:
                 traceback.print_exc()
