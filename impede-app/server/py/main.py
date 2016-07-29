@@ -35,6 +35,6 @@ def stratocaster_test():
     SH.save(output_signal, Config.output_dir + "stratocasterout.wav", bytespersample=2, peak=1)
 
 if __name__ == "__main__":
-    #noninverting_op_amp_test()
-    lpf_test()
+    noninverting_op_amp_test()
+    #lpf_test()
     #stratocaster_test()

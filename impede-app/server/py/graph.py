@@ -248,7 +248,6 @@ class Graph(object):
         constraints = []
         for component in self._components:
             constraints += component.constraints()
-        #print("Component constraints: {0}".format(len(constraints)))
 
         # Add constraints to fixed nodes
         for var in variables:
@@ -258,7 +257,6 @@ class Graph(object):
                 b = var.value()
 
                 constraints.append(Constraint(cs, xs, b))
-        #print("Fixed constraints: {0}".format(len(constraints)))
 
         # Add KCL constraints
         for var in variables:
@@ -266,23 +264,9 @@ class Graph(object):
                 # Get all edges and their directions wrt. this node
                 if not var.is_source():
                     edges, polarities = self.connected_edges(var)
-                    if len(edges) <= 1:
-                        if var.is_output():
-                            # Outputs assume an infinite impedence
-                            cs = [1]
-                            xs = edges
-                            constraints.append(Constraint(cs, xs))
-                    else:
-                        cs = polarities
-                        xs = edges
-                        constraints.append(Constraint(cs, xs))
-        #print("KCL constraints: {0}".format(len(constraints)))
-
-        # Add a constraint for the constant "1"
-        #constraints.append(([1], [const_variable]))
-        # Note that this should be the last row in the matrix!!
-        #print("All constraints: {0}".format(len(constraints)))
-
+                    cs = polarities
+                    xs = edges
+                    constraints.append(Constraint(cs, xs))
         return constraints
 
     def internal_subs(self):

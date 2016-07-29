@@ -40,14 +40,14 @@ init = (id=null) =>
               Metastate.value_text = ""
               Metastate.updateGhost()
               DA.addMessage("Selected capacitor")
-            when 76  # l
+            when 76  # l / L
               if e.shiftKey
+                  Metastate.loadInput()
+              else
                   Metastate.selected = Elements.INDUCTOR
                   Metastate.value_text = ""
                   Metastate.updateGhost()
                   DA.addMessage("Selected inductor")
-              else
-                  Metastate.loadInput()
             when 71  # g
               Metastate.selected = Elements.GND
               Metastate.updateGhost()
@@ -74,9 +74,15 @@ init = (id=null) =>
               Metastate.updateGhost()
               DA.addMessage("Selected op amp")
             # UNITS
-            when 80  # p
-              use_unit(Units::p)
-              DA.addMessage("Unit pico")
+            when 80  # p / P
+              if e.shiftKey
+                Metastate.save()
+                DA.addMessage("Rendering... this may take some time")
+                Metastate.play()
+                DA.addMessage("Playing...")
+              else
+                use_unit(Units::p)
+                DA.addMessage("Unit pico")
             when 78  # n
               use_unit(Units::n)
               DA.addMessage("Unit nano")

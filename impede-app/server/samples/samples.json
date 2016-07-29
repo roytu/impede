@@ -1,0 +1,7 @@
+{
+    "samples" : [
+        ["sine.wav", "samples/sine.wav"],
+        ["stratocaster.wav", "samples/stratocaster.wav"],
+        ["cleanguitar.wav", "samples/cleanguitar.wav"]
+    ]
+}

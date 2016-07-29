@@ -15,6 +15,8 @@ from opamp import Opamp
 from wire import Wire
 from units import Units
 from filter import Filter
+from sound_handler import SoundHandler as SH
+from config import Config
 
 def make_filter(config):
     """ Returns a Filter object. """
@@ -34,60 +36,41 @@ def make_filter(config):
 
     def get_node(pt, value=0, fixed=False, source=False, output=False):
         if pt not in pt2node:
+            s = "Node(graph"
+            if value:
+                s += ", value=True"
+            if fixed:
+                s += ", fixed=True"
+            if source:
+                s += ", source=True"
+            if output:
+                s += ", output=True"
+            s += ") at {0}"
+            print(s.format(pt))
             pt2node[pt] = Node(graph, value=value, fixed=fixed,
                                source=source, output=output)
         return pt2node[pt]
 
     # Special nodes have priority on creation
     # TODO cleanup
-    vsrcs_ = {}
     vin_ = None
     vout_ = None
 
-    # All grounds are the same node
     for [x, y] in grounds:
         pt = (x, y)
-        if 0 not in vsrcs_:
-            node = get_node(pt, value=0, fixed=True, source=True)
-            vsrcs_[0] = node
-        else:
-            node = get_node(pt)
-            edge = Edge(graph, node, vsrcs_[0])
-            wire = Wire(graph, node, vsrcs_[0], edge)
-            graph.add_component(wire)
+        get_node(pt, value=0, fixed=True, source=True)
 
     for [x, y, v] in v_srcs:
         pt = (x, y)
-        if v not in vsrcs_:
-            node = get_node(pt, value=v, fixed=True, source=True)
-            vsrcs_[v] = node
-        else:
-            node = get_node(pt)
-            edge = Edge(graph, node, vsrcs_[v])
-            wire = Wire(graph, node, vsrcs_[v], edge)
-            graph.add_component(wire)
+        get_node(pt, value=v, fixed=True, source=True)
 
     for [x, y] in v_ins:
         pt = (x, y)
-        if not vin_:
-            node = get_node(pt, fixed=True, source=True)
-            vin_ = node
-        else:
-            node = get_node(pt)
-            edge = Edge(graph, node, vin_)
-            wire = Wire(graph, node, vin_, edge)
-            graph.add_component(wire)
+        vin_ = get_node(pt, fixed=True, source=True)
 
     for [x, y] in v_outs:
         pt = (x, y)
-        if not vout_:
-            node = get_node(pt, output=True)
-            vout_ = node
-        else:
-            node = get_node(pt)
-            edge = Edge(graph, node, vout_)
-            wire = Wire(graph, node, vout_, edge)
-            graph.add_component(wire)
+        vout_ = get_node(pt, output=True)
 
     # Other components
     for [x, y] in opamps:
@@ -99,8 +82,11 @@ def make_filter(config):
         node_plus = get_node(pt_plus)
         node_out = get_node(pt_out, source=True)
         
+        s = "Opamp(graph, node_a={0}, node_b={1}, node_out={2})"
+        print(s.format(pt_minus, pt_plus, pt_out))
         opamp = Opamp(graph, node_a=node_minus, node_b=node_plus,
                       node_out=node_out)
+
         graph.add_component(opamp)
 
     for [x1, y1, x2, y2] in wires:
@@ -109,8 +95,13 @@ def make_filter(config):
 
         node1 = get_node(pt1)
         node2 = get_node(pt2)
+
+        #s = "Edge(graph, {0}, {1})"
+        #print(s.format(pt1, pt2))
         edge = Edge(graph, node1, node2)
 
+        s = "Wire(graph, {0}, {1}, (edge))"
+        print(s.format(pt1, pt2))
         wire = Wire(graph, node1, node2, edge)
         graph.add_component(wire)
 
@@ -120,9 +111,15 @@ def make_filter(config):
 
         node1 = get_node(pt1)
         node2 = get_node(pt2)
+
+        #s = "Edge(graph, {0}, {1})"
+        #print(s.format(pt1, pt2))
         edge = Edge(graph, node1, node2)
 
+        s = "Resistor(graph, {0}, {1}, (edge))"
+        print(s.format(pt1, pt2))
         resistor = Resistor(graph, v, node1, node2, edge)
+
         graph.add_component(resistor)
 
     for [x, y, v] in capacitors:
@@ -131,9 +128,15 @@ def make_filter(config):
 
         node1 = get_node(pt1)
         node2 = get_node(pt2)
+
+        #s = "Edge(graph, {0}, {1})"
+        #print(s.format(pt1, pt2))
         edge = Edge(graph, node1, node2)
 
+        s = "Capacitor(graph, {0}, {1}, (edge))"
+        print(s.format(pt1, pt2))
         capacitor = Capacitor(graph, v, node1, node2, edge)
+
         graph.add_component(capacitor)
 
     for [x, y, v] in inductors:
@@ -142,16 +145,20 @@ def make_filter(config):
 
         node1 = get_node(pt1)
         node2 = get_node(pt2)
+
+        #s = "Edge(graph, {0}, {1})"
+        #print(s.format(pt1, pt2))
         edge = Edge(graph, node1, node2)
 
-        inductors = Inductors(graph, v, node1, node2, edge)
-        graph.add_component(inductors)
+        s = "Inductor(graph, {0}, {1}, (edge))"
+        print(s.format(pt1, pt2))
+        inductor = Inductor(graph, v, node1, node2, edge)
+
+        graph.add_component(inductor)
 
     return Filter(graph, vin_, vout_)
 
-if __name__ == "__main__":
-    id_ = sys.argv[1]
-
+def play(id_):
     client = MongoClient("mongodb://127.0.0.1:3001/meteor")
     db = client["meteor"]
     match = db["sessions"].find_one(id_)
@@ -160,5 +167,18 @@ if __name__ == "__main__":
     # Build filter
     filter_ = make_filter(config)
 
-    # Play?
+    samples = None
+    with open(Config.samples_dir + "samples.json", "r") as f:
+        samples = json.loads(f.read())["samples"]
+    sample_id = int(config["sample"])
 
+    sample_fname = "../" + samples[sample_id][1]
+
+    input_signal = SH.load(sample_fname, sampleperiod=Config.time_step, peak=1)
+    output_signal = filter_.execute(input_signal)
+
+    SH.save(output_signal, Config.output_dir + str(id_) + ".wav",
+            bytespersample=2, peak=1)
+
+    # Tell meteor it is done
+    db["sessions"].update_one({ "_id" : id_ }, { "$set" : { "pydone": True }})

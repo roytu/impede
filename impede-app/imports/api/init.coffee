@@ -1,8 +1,9 @@
 
 # Initialize the server
 
-# Make "sessions" if it doesn't already exist
 sessions = new Meteor.Collection("sessions")
+processQueue = new Meteor.Collection("processQueue")
  
 if Meteor.isServer
     Meteor.publish("sessions", => return sessions.find())
+    Meteor.publish("processQueue", => return processQueue.find())

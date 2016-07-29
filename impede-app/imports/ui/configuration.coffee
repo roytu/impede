@@ -16,6 +16,8 @@ class @Configuration
         @v_ins = []
         @v_outs = []
 
+        @sample = null
+
     addWire: (x1, y1, x2, y2) ->
         if not contains(@wires, [x1, y1, x2, y2]) and (x1 != x2 and y1 != y2)
             @wires.push([x1, y1, x2, y2])
@@ -44,3 +46,5 @@ class @Configuration
         @v_srcs = pr["v_srcs"]
         @v_ins = pr["v_ins"]
         @v_outs = pr["v_outs"]
+
+        @sample = pr["sample"]
