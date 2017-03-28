@@ -4,7 +4,7 @@
 from sound_handler import SoundHandler as SH
 from config import Config
 from filter_library import make_mxr_distortion_filter
-from common_filters import NoninvertingOpAmpFilter
+from common_filters import LowPassFilter, NoninvertingOpAmpFilter
 from signals import Signal
 
 def noninverting_op_amp_test():
@@ -12,6 +12,12 @@ def noninverting_op_amp_test():
     input_signal = Signal.sine(0.1, 440, 1, 0)
     output_signal = amp_filter.execute(input_signal)
     amp_filter.plot_probes()
+
+def lpf_test():
+    lpf_filter = LowPassFilter.make(100, 100)
+    input_signal = Signal.sine(0.1, 440, 1, 0)
+    output_signal = lpf_filter.execute(input_signal)
+    lpf_filter.plot_probes()
 
 def stratocaster_test():
     #filename = Config.samples_dir + "clean_guitar.wav"
@@ -29,5 +35,6 @@ def stratocaster_test():
     SH.save(output_signal, Config.output_dir + "stratocasterout.wav", bytespersample=2, peak=1)
 
 if __name__ == "__main__":
-    #noninverting_op_amp_test()
-    stratocaster_test()
+    noninverting_op_amp_test()
+    #lpf_test()
+    #stratocaster_test()

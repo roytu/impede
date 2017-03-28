@@ -162,6 +162,7 @@ class Graph(object):
         self._edges = []
         self._components = []
         self.__sub_func = {}
+        self.__variables = None
 
     def add_node(self, node):
         """ Adds a node to this graph and returns its ID.
@@ -218,12 +219,17 @@ class Graph(object):
         Returns:
             list of Nodes, Edges, or tuples
         """
+        # TODO WARNING VARIABLES IS CACHED!!
+        if self.__variables:
+            return self.__variables
+
         # Gather variables and constraints
         variables = set([])
         for component in self._components:
             variables = variables.union(set(component.variables()))
 
-        return list(variables)
+        self.__variables = list(variables)
+        return self.__variables
 
     def sympy_variables(self):
         """ Return a list of sympy variables associated with the variable
@@ -248,7 +254,6 @@ class Graph(object):
         constraints = []
         for component in self._components:
             constraints += component.constraints()
-        #print("Component constraints: {0}".format(len(constraints)))
 
         # Add constraints to fixed nodes
         for var in variables:
@@ -258,31 +263,16 @@ class Graph(object):
                 b = var.value()
 
                 constraints.append(Constraint(cs, xs, b))
-        #print("Fixed constraints: {0}".format(len(constraints)))
 
         # Add KCL constraints
         for var in variables:
             if isinstance(var, Node):
                 # Get all edges and their directions wrt. this node
-                edges, polarities = self.connected_edges(var)
                 if not var.is_source():
-                    if len(edges) <= 1:
-                        if var.is_output():
-                            # Outputs assume an infinite impedence
-                            cs = [1]
-                            xs = [edges]
-                            constraints.append(Constraint(cs, xs))
-                    else:
-                        cs = polarities
-                        xs = edges
-                        constraints.append(Constraint(cs, xs))
-        #print("KCL constraints: {0}".format(len(constraints)))
-
-        # Add a constraint for the constant "1"
-        #constraints.append(([1], [const_variable]))
-        # Note that this should be the last row in the matrix!!
-        #print("All constraints: {0}".format(len(constraints)))
-
+                    edges, polarities = self.connected_edges(var)
+                    cs = polarities
+                    xs = edges
+                    constraints.append(Constraint(cs, xs))
         return constraints
 
     def internal_subs(self):
@@ -293,8 +283,7 @@ class Graph(object):
         """
         subs = {}
         for component in self._components:
-            for k, v in component.substitutions().items():
-                subs[k] = v
+            subs.update(component.substitutions())
         return subs
 
     def update(self, external_subs=None):

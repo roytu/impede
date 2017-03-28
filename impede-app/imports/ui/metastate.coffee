@@ -2,7 +2,7 @@ class @Metastate
     # A Metastate (singleton) handles all the information about the current user's
     # settings; i.e. currently selected element
     instance = null
-    constructor: (@config) ->
+    constructor: (@id) ->
         if instance
             return instance
         else
@@ -17,6 +17,19 @@ class @Metastate
         @first_mx = null
         @first_my = null
 
+        @sessions = new Meteor.Collection("sessions")
+        @processQueue = new Meteor.Collection("processQueue")
+        @playCallback = null
+
+        Meteor.subscribe("sessions", {
+            onReady: =>
+                @config = new Configuration()
+                if @id != null
+                    match = @sessions.findOne(@id)
+                    @config.fromString(JSON.stringify(match["config"]))
+                    @updateSVGs()
+        })
+        
     initialize: ->
         DA = window.DescArea()
         @_ghost = DA.svg.append("svg")
@@ -88,31 +101,8 @@ class @Metastate
 
     removeElement: (mx, my) ->
         # Explicitly remove HTML by rounding
-        Grid = window.Grid
-        State = window.State
-
         mpos = Grid.getGridPosNoround(mx, my)
         pos = Grid.getGridPos(mx, my)
-
-        # Delete wires
-        arr = @config.wires
-        if arr.length > 0
-            for i in [0..arr.length-1]
-                x = arr[i]
-
-                # Check if mouse position is close enough to pos
-                # https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
-                [x0, y0] = [mpos[0], mpos[1]]
-                [x1, y1] = [x[0], x[1]]
-                [x2, y2] = [x[2], x[3]]
-                num = Math.abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1)
-                den = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2))
-                dist = num / den
-                
-                if dist < 0.5
-                    arr.splice(i, 1)
-                    @updateSVGs()
-                    return
 
         # Delete normal elements
         elementArrays = [@config.resistors,
@@ -131,6 +121,33 @@ class @Metastate
                         arr.splice(i, 1)
                         @updateSVGs()
                         return
+
+        # Delete wires
+        arr = @config.wires
+        if arr.length > 0
+            for i in [0..arr.length-1]
+                x = arr[i]
+
+                # Check if mouse position is close enough to pos
+                # https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
+                [x0, y0] = [mpos[0], mpos[1]]
+                [x1, y1] = [x[0], x[1]]
+                [x2, y2] = [x[2], x[3]]
+
+                if x0 <= Math.min(x1, x2) - 0.5 or x0 >= Math.max(x1, x2) + 0.5
+                   continue
+
+                if y0 <= Math.min(y1, y2) - 0.5 or y0 >= Math.max(y1, y2) + 0.5
+                   continue
+                    
+                num = Math.abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1)
+                den = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2))
+                dist = num / den
+                
+                if dist < 0.5
+                    arr.splice(i, 1)
+                    @updateSVGs()
+                    return
 
     updateSVGs: ->
         @_svgs.forEach( (svg) ->
@@ -159,28 +176,50 @@ class @Metastate
             @_svgs.push(WireSprite.constructSVG.apply(this, pos))
 
     save: ->
-        # Take input signal
-        session = new Meteor.Collection("sessions")
-        id = session.find().count()
-        session.insert({
-            id: id,
-            config: @config
-            # TODO save Vin
-        })
+        if @id == null
+            @sessions.insert({ "config" : @config }, (err, id) =>
+                @id = id
+                FlowRouter.go("/:id", { "id": @id })
+            )
+        else
+            if @sessions.find(@id).count == 0
+                @sessions.insert(@id, { "config" : @config })
+            else
+                @sessions.update(@id, { "config" : @config })
 
     loadInput: ->
         # Allows the user to load a WAV file
-        # TODO
+        DA = window.DescArea()
+
+        s = ""
+        for sample in Samples.samples
+            s += "#{sample} - #{Samples.getName(sample)}\n"
+        input = parseInt(prompt(s))
+        if input in Samples.samples
+            @config.sample = input
+            DA.addMessage("Vin changed to #{Samples.getName(input)}")
+        else
+            DA.addMessage("Invalid input!")
         return
 
     load: (jsonStr) ->
-        State = window.State
-
         jsonStr ?= prompt("Paste your JSON!")
         if jsonStr?
-            State.stop()
-            State.config.fromString(jsonStr)
             @updateSVGs()
+
+    play: ->
+        @sessions.update(@id, {$set: { "pydone" : false }})
+        @processQueue.insert({ "id" : @id })
+
+        if @playCallback != null
+            @playCallback.stop()
+        @playCallback = @sessions.find(@id).observeChanges({
+            changed: (id, fields) =>
+                if fields.pydone == true
+                    @playCallback.stop()
+                    audio = new Audio("../output/#{@id}.wav")
+                    audio.play()
+        })
 
     getValue: ->
         if @value_text == ""

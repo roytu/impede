@@ -10,7 +10,7 @@ from tests import test
 class Func(object):
     def __init__(self, expr):
         self.free_symbols = list(expr.free_symbols)
-        self.fast_func = sy.lambdify(self.free_symbols, expr)
+        self.fast_func = sy.lambdify(self.free_symbols, sy.simplify(expr))
 
     def __call__(self, subs):
         """ Evaluates the function.  This should be FAST!

@@ -14,5 +14,5 @@ class Config(object):
     samples_dir = "../samples/"
     """ Directory of samples relative to source directory """
 
-    output_dir = "../output/"
+    output_dir = "../../public/output/"
     """ Directory of output relative to source directory """
