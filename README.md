@@ -2,7 +2,9 @@
 
 ![](/images/demo.png)
 
-SPICE-like program to simulate stompbox circuits.
+SPICE-like program to simulate stompbox circuits.  The circuit is reduced symbolically (with Sympy) and then processed on the input signal, producing an audio output signal.
+
+WIP
 
 Run with:
 
@@ -14,4 +16,5 @@ Currently supports:
 * Resistors
 * Capacitors
 * Inductors
-* Op-amps
+* Diodes
+* Op-amps (in feedback mode)
